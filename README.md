@@ -18,6 +18,7 @@ This repository holds the final thesis, the HMI scoring engine source code, the 
 | [`results/`](results/) | Full 2,745-response scored dataset (`hmi_results.csv`) plus the research matrices and statistical analysis workbooks |
 | [`screenshots/`](screenshots/) | Dashboard screenshots (single-response, batch, cross-chatbot comparison modes) used in the thesis defence |
 | [`references/`](references/) | Analysis of the source papers cited in the literature review (title, authors, DOI, abstract, relevance) |
+| [`Paper Used/`](Paper%20Used/) | Full-text PDFs of the 83 papers cited in the literature review |
 
 ---
 
@@ -49,7 +50,7 @@ See [`source_code/README.md`](source_code/README.md) for setup and demo instruct
 
 ## Note on literature references
 
-`references/PAPER_ANALYSIS_ALL.md` contains bibliographic analysis (title, authors, DOI, abstract, relevance) of the papers cited in the thesis, not the source PDFs themselves — most are copyrighted publisher content and are not redistributed here. Use the DOIs to retrieve the original papers.
+`references/PAPER_ANALYSIS_ALL.md` contains bibliographic analysis (title, authors, DOI, abstract, relevance) of the papers cited in the thesis. `Paper Used/` holds the full-text PDFs of those papers — most are copyrighted publisher content, kept here only for private reference within this repository, not for redistribution elsewhere.
 
 ---
 
