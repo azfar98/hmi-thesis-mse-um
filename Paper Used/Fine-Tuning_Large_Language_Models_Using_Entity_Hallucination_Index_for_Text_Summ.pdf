@@ -1,0 +1,2345 @@
+
+<!doctype html>
+<html lang="en">
+<head><style>img.lazy{min-height:1px}</style><link href="https://www.jove.com/wp-content/plugins/w3-total-cache/pub/js/lazyload.min.js" as="script">
+    <script>
+        (function () {
+        const path = window.location.pathname;
+
+        // Skip redirect for these paths (same idea as nginx/js)
+        const skip = /^\/(?:(?:cn|de|es|kr|it|fr|pt|pl|he|ru|ja|tr|ar)\/)?(?:wp-(?:content|admin|login\.php)|editor|authors|librarians|leadership|about|course-solutions|biopharma|newsroom|files|CDNSource|schools|Shibboleth)(?:\/|$)/i;
+
+        // token check
+        const hasToken = /(?:^|;\s*)jove-mptoken=/.test(document.cookie);
+
+        if (!skip.test(path) && hasToken) {
+            // replace www.* with app.* for preview + prod
+            window.location.replace(window.location.href.replace(/\/\/www([.-]preview-\w{1,8}[.]test)?/, '//app$1'));
+        }
+        })();
+    </script>
+    <title>Fine-Tuning Large Language Models Using Entity Hallucination Index for Text Summarization</title>
+<meta name='description' content='International Institute of Information Technology.  We propose a reinforcement-learning-based fine-tuning approach for large language models that uses the Enti Hallucination Index (EHI) as a reward signal to reduce entity-level hallucination in text summarization. Experiments on meeting transcripts show that this method improves entity faithfulness and accuracy.'>
+<meta property='og:title' content='Fine-Tuning Large Language Models Using Entity Hallucination Index for Text Summarization'>
+<meta property='og:description' content='International Institute of Information Technology.  We propose a reinforcement-learning-based fine-tuning approach for large language models that uses the Enti Hallucination Index (EHI) as a reward signal to reduce entity-level hallucination in text summarization. Experiments on meeting transcripts show that this method improves entity faithfulness and accuracy.'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="baidu-site-verification" content="codeva-nrvimZcuuW" />
+    <link rel="profile" href="https://gmpg.org/xfn/11">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="icon" href="https://www.jove.com/favicon.ico" sizes="any" type="image/x-icon">
+    <link rel="icon" href="https://www.jove.com/wp-content/uploads/2024/07/favicon512-150x150.png" sizes="32x32" />
+	<link rel="icon" href="https://www.jove.com/wp-content/uploads/2024/07/favicon512-300x300.png" sizes="192x192" />
+	<link rel="apple-touch-icon" href="https://www.jove.com/wp-content/uploads/2024/07/favicon512-300x300.png" />
+	<meta name="msapplication-TileImage" content="https://www.jove.com/wp-content/uploads/2024/07/favicon512-300x300.png" />
+
+    <!-- Start cookieyes banner -->
+    <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/6d0ea5f304f5827670fba4ca/script.js" defer></script>
+    <!-- End cookieyes banner -->
+    
+    <meta name='robots' content='max-image-preview:large' />
+	<style>img:is([sizes="auto" i], [sizes^="auto," i]) { contain-intrinsic-size: 3000px 1500px }</style>
+	<link rel='dns-prefetch' href='//www.jove.com' />
+<link rel="alternate" type="application/rss+xml" title="JoVE &raquo; Feed" href="https://www.jove.com/feed" />
+<link rel="alternate" type="application/rss+xml" title="JoVE &raquo; Comments Feed" href="https://www.jove.com/comments/feed" />
+<link rel='stylesheet' id='genesis-blocks-style-css-css' href='https://www.jove.com/wp-content/plugins/genesis-blocks/dist/style-blocks.build.css?ver=1752051560' media='all' />
+<link rel='stylesheet' id='contact-form-7-css' href='https://www.jove.com/wp-content/plugins/contact-form-7/includes/css/styles.css?ver=6.0.6' media='all' />
+<link rel='stylesheet' id='flowplayer-css-css' href='https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/flowplayer.css?ver=1772726123' media='all' />
+<link rel='stylesheet' id='flowplayer-custom-css-css' href='https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/flowplayer-custom.css?ver=1772726123' media='all' />
+<link rel='stylesheet' id='trp-language-switcher-style-css' href='https://www.jove.com/wp-content/plugins/translatepress-multilingual/assets/css/trp-language-switcher.css?ver=2.7.9' media='all' />
+<style id='trp-language-switcher-style-inline-css'>
+.trp_language_switcher_shortcode .trp-language-switcher .trp-ls-shortcode-current-language.trp-ls-clicked{
+    visibility: hidden;
+}
+
+.trp_language_switcher_shortcode .trp-language-switcher:hover div.trp-ls-shortcode-current-language{
+    visibility: visible;
+}
+
+.trp_language_switcher_shortcode .trp-language-switcher:hover div.trp-ls-shortcode-language{
+    visibility: hidden;
+    height: 1px;
+}
+.trp_language_switcher_shortcode .trp-language-switcher .trp-ls-shortcode-language.trp-ls-clicked,
+.trp_language_switcher_shortcode .trp-language-switcher:hover .trp-ls-shortcode-language.trp-ls-clicked{
+    visibility:visible;
+    height:auto;
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: inline-block !important;
+}
+</style>
+<link rel='stylesheet' id='jove-style-css' href='https://www.jove.com/wp-content/themes/jove/style.css?ver=1772916854' media='all' />
+<link rel='stylesheet' id='ecs-styles-css' href='https://www.jove.com/wp-content/plugins/ele-custom-skin/assets/css/ecs-style.css?ver=3.1.9' media='all' />
+
+<meta name="citation_title" content="Fine-Tuning Large Language Models Using Entity Hallucination Index for Text Summarization" />
+<meta name="citation_journal_title" content="JoVE (Journal of Visualized Experiments)" />
+<meta name="citation_publication_date" content="2026/01/09" />
+<meta name="citation_issue" content="227" />
+<meta name="citation_firstpage" content="e68962" />
+<meta name="citation_pdf_url" content="https://app.jove.com/pdf/68962/fine-tuning-large-language-models-using-entity-hallucination-index" />
+<meta name="citation_doi" content="10.3791/68962" />
+<meta name="citation_issn" content="1940-087X" />
+<meta name="citation_abstract" content="Recent advancements in large language models (LLMs) have led to notable improvements in abstractive summarization quality. However, hallucination - especially entity-level hallucination where non-existent or incorrect entities are introduced - remains a critical challenge. In this work, we propose a reward-driven fine-tuning framework for summarization models using the Entity Hallucination Index (EHI) as a guiding metric. The methodology here begins with generating initial summaries from pre-trained models such as Flan-T5, DistilBART, and Mistral (or other popular LLM) on structured transcript datasets, XSUM. We compute EHI by extracting named entities from both generated summaries and gold references, evaluating precision, and penalizing fabricated entities. The fine-tuning process is guided by reinforcement learning, where EHI serves as the reward signal. We adopt a REINFORCE-style update mechanism to optimize the summarization model towards maximizing entity faithfulness. Experiments demonstrate that models fine-tuned with EHI achieve lower hallucination rates without compromising informativeness. Furthermore, we show that EHI-guided models generalize better on out-of-domain summarization tasks, suggesting enhanced robustness. The approach here offers a practical direction for improving factuality in summarization, emphasizing the critical role of accurate entity representation." />
+<meta name="citation_author" content="Praveenkumar K." />
+<meta name="citation_author_institution" content="Computer Science Department, International Institute of Information Technology" />
+<meta name="citation_author_institution" content="Global Customer Success, Informatica Business Solutions" />
+<meta name="citation_author" content="Rakesh Chandra Balabantaray" />
+<meta name="citation_author_institution" content="Computer Science Department, International Institute of Information Technology" />
+<meta name="citation_author" content="Kali Prasad Vittala" />
+<meta name="citation_author_institution" content="Global Customer Success, Informatica Business Solutions" />
+<meta name="citation_author" content="Muktikanta Sahu" />
+<meta name="citation_author_institution" content="Computer Science Department, International Institute of Information Technology" />
+<script src="https://www.jove.com/wp-content/themes/jove/js/ip-redirect.js?ver=1772916854" id="ip-redirect-js"></script>
+<script src="https://www.jove.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1" id="jquery-core-js"></script>
+<script src="https://www.jove.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1" id="jquery-migrate-js"></script>
+<script id="ecs_ajax_load-js-extra">
+var ecs_ajax_params = {"ajaxurl":"https:\/\/www.jove.com\/wp-admin\/admin-ajax.php","posts":"{\"name\":\"fine-tuning-large-language-models-using-entity-hallucination-index-for-text-summarization\",\"post_type\":\"article\",\"article\":\"fine-tuning-large-language-models-using-entity-hallucination-index-for-text-summarization\",\"do_not_redirect\":1,\"error\":\"\",\"m\":\"\",\"p\":0,\"post_parent\":\"\",\"subpost\":\"\",\"subpost_id\":\"\",\"attachment\":\"\",\"attachment_id\":0,\"pagename\":\"\",\"page_id\":0,\"second\":\"\",\"minute\":\"\",\"hour\":\"\",\"day\":0,\"monthnum\":0,\"year\":0,\"w\":0,\"category_name\":\"\",\"tag\":\"\",\"cat\":\"\",\"tag_id\":\"\",\"author\":\"\",\"author_name\":\"\",\"feed\":\"\",\"tb\":\"\",\"paged\":0,\"meta_key\":\"\",\"meta_value\":\"\",\"preview\":\"\",\"s\":\"\",\"sentence\":\"\",\"title\":\"\",\"fields\":\"\",\"menu_order\":\"\",\"embed\":\"\",\"category__in\":[],\"category__not_in\":[],\"category__and\":[],\"post__in\":[],\"post__not_in\":[],\"post_name__in\":[],\"tag__in\":[],\"tag__not_in\":[],\"tag__and\":[],\"tag_slug__in\":[],\"tag_slug__and\":[],\"post_parent__in\":[],\"post_parent__not_in\":[],\"author__in\":[],\"author__not_in\":[],\"search_columns\":[],\"ignore_sticky_posts\":false,\"suppress_filters\":false,\"cache_results\":true,\"update_post_term_cache\":true,\"update_menu_item_cache\":false,\"lazy_load_term_meta\":true,\"update_post_meta_cache\":true,\"posts_per_page\":10,\"nopaging\":false,\"comments_per_page\":\"50\",\"no_found_rows\":false,\"order\":\"DESC\"}"};
+</script>
+<script src="https://www.jove.com/wp-content/plugins/ele-custom-skin/assets/js/ecs_ajax_pagination.js?ver=3.1.9" id="ecs_ajax_load-js"></script>
+<script src="https://www.jove.com/wp-content/plugins/ele-custom-skin/assets/js/ecs.js?ver=3.1.9" id="ecs-script-js"></script>
+<link rel="https://api.w.org/" href="https://www.jove.com/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="https://www.jove.com/wp-json/wp/v2/article/50376" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://www.jove.com/xmlrpc.php?rsd" />
+<meta name="generator" content="WordPress 6.7.1" />
+<link rel='shortlink' href='https://www.jove.com/?p=50376' />
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://www.jove.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.jove.com%2F68962" />
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://www.jove.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.jove.com%2F68962&#038;format=xml" />
+<link rel="alternate" hreflang="x-default" href="https://www.jove.com/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="zh" href="https://www.jove.com/cn/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="de" href="https://www.jove.com/de/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="es" href="https://www.jove.com/es/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="ko" href="https://www.jove.com/kr/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="it" href="https://www.jove.com/it/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="fr" href="https://www.jove.com/fr/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="pt" href="https://www.jove.com/pt/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="pl" href="https://www.jove.com/pl/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="he" href="https://www.jove.com/he/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="ru" href="https://www.jove.com/ru/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="ja" href="https://www.jove.com/ja/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="tr" href="https://www.jove.com/tr/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="alternate" hreflang="ar" href="https://www.jove.com/ar/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"/>
+<link rel="canonical" href="https://www.jove.com/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" />
+<script>
+        // IP redirection data - automatically generated
+        window.joveRedirectData = {
+            location: "/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index",
+            articleId: "68962",
+            postId: "50376",
+            accessType: "0",
+            timestamp: "2026-03-07 20:54:14",
+            pageUrl: "https://www.jove.com/68962"
+        };
+        </script><script>
+        function runRedirect() {
+            if (window.joveRedirectData && window.executeRedirect) {
+                try {
+                    window.executeRedirect(
+                        window.joveRedirectData.location, 
+                        window.joveRedirectData.articleId
+                    );
+                } catch (error) {
+                    // Error handling - could add fallback behavior here if needed
+                }
+            } else {
+                setTimeout(runRedirect, 100);
+            }
+        }
+        
+        // Wait for DOM and scripts to load
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", function() { setTimeout(runRedirect, 10); });
+        } else {
+            setTimeout(runRedirect, 100);
+        }
+        </script><meta name="generator" content="Elementor 3.28.4; features: e_font_icon_svg, additional_custom_breakpoints, e_local_google_fonts; settings: css_print_method-internal, google_font-enabled, font_display-swap">
+			<style>
+				.e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload),
+				.e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload) * {
+					background-image: none !important;
+				}
+				@media screen and (max-height: 1024px) {
+					.e-con.e-parent:nth-of-type(n+3):not(.e-lazyloaded):not(.e-no-lazyload),
+					.e-con.e-parent:nth-of-type(n+3):not(.e-lazyloaded):not(.e-no-lazyload) * {
+						background-image: none !important;
+					}
+				}
+				@media screen and (max-height: 640px) {
+					.e-con.e-parent:nth-of-type(n+2):not(.e-lazyloaded):not(.e-no-lazyload),
+					.e-con.e-parent:nth-of-type(n+2):not(.e-lazyloaded):not(.e-no-lazyload) * {
+						background-image: none !important;
+					}
+				}
+			</style>
+			<meta name="keywords" content=" large language models,  abstractive summarization,  entity-level hallucination,  Entity Hallucination Index (EHI),  fine-tuning,  reinforcement learning,  Flan-T5,  DistilBART,  Mistral,  precision, "/>
+<link rel="icon" href="https://www.jove.com/wp-content/uploads/2024/07/favicon512-150x150.png" sizes="32x32" />
+<link rel="icon" href="https://www.jove.com/wp-content/uploads/2024/07/favicon512-300x300.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://www.jove.com/wp-content/uploads/2024/07/favicon512-300x300.png" />
+<meta name="msapplication-TileImage" content="https://www.jove.com/wp-content/uploads/2024/07/favicon512-300x300.png" />
+		<style id="wp-custom-css">
+			.e-far-play-circle {
+    fill: #3273e8 !important;
+}
+
+
+
+div#splash-top, div#overlay-pause {  z-index: 99999; }
+flowplayer-middle-buttons.fp-switch {
+    z-index: 999;
+}
+
+.sc_video_main_wrapper img.jove-thumbnail {
+    
+    position: relative;
+    z-index: 9;
+    /* pointer-events: none; */
+}
+.jove-access-2 .sc_video_main_wrapper img.jove-thumbnail {
+    
+ 
+    z-index: 0 !important;
+    /* pointer-events: none; */
+}
+
+span.access-section  a {
+    text-decoration: none;
+   color:#4193F4;
+}
+
+header#masthead {
+  
+    z-index: 99999999;
+}
+
+
+.jove-player {
+    font-family: 'work sans', avenir, sans-serif;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    background-color: #333;
+    display: inline-block;
+    position: relative;
+    text-align: left;
+    overflow: hidden;
+    font-size: 16px;
+    width: 100%;
+    color: white;
+}
+/* .jove-player:not(.is-loaded) {
+    visibility: hidden;
+}
+.jove-player.is-loaded {
+    visibility: visible;
+    transition: visibility 0s linear;
+} */
+
+/*thumbnail cropping*/
+
+@media (max-width: 1300px) {
+    .video_thumb {
+        max-width: 15% !important;
+       
+    }
+	
+	
+}
+@media (max-width:600px) {
+	
+	
+	.testimonials_video_content { width:100%;
+	    top: 30%;
+	}
+	
+	.footer-heading.d-flex.justify-content-between.align-items-center {
+    pointer-events:auto!important;
+}
+
+/*temp solution*/
+	body ,html{overflow-x:hidden}
+/* */
+	
+.edb_member {
+    width: 100%;
+}
+	.flowplayer  #overlay-access {
+   
+    min-height: 50px;
+}
+	
+	.flowplayer  .access-left { display:none}
+    .flowplayer  {
+       min-height:250px;
+       
+    }
+	.fp-ratio {padding:0 !important;}
+	flowplayer-middle-zone.fp-middle-zone {
+    top: 30px;
+    position: relative;
+}
+	
+	.flowplayer img.jove-thumbnail {
+   
+    top: 50px;
+}
+	.access-right.no-sub {
+    padding: 0;
+    line-height: 20px;
+}
+}
+
+
+
+.jove_accordion_close { display:none;}
+
+.active .jove_accordion_open {
+    display: none;
+}
+
+.active .jove_accordion_close {
+    display: block;
+}
+
+.elementor-video-close {z-index:9999;}
+
+/* .sc_related a { margin:2px} */
+
+
+.language_switcher_items a.active {
+    color: #137cec;
+    text-shadow:0 4px 4px rgba(0, 0, 0, 0.25);
+}
+    
+.sc_sidebar img:before, .sc_video_thumb img:before {
+    background: #f1f1f1;
+    border: none;
+    content: ' ';
+    background-image: url(https://www.jove.com/wp-content/themes/jove/images/VideoComingSoonTeaser.webp);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    display: block;
+    left: 0;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    bottom: 0;
+}
+
+p.subheaderp.archive { font-weight:500}
+
+
+.testimonials_item.col-lg-4:hover {
+    box-shadow: 0px 6px 8px -2px #00000047;
+}
+
+.elementor_faq_title {
+    cursor: pointer;
+}
+
+.accordion_page .sc_text_acc_title {
+    cursor: pointer;
+    background: url('/wp-content/themes/jove/images/arrow_up_black.svg') no-repeat right center;
+}
+
+.sc_text_acc_title.open {
+    cursor: pointer;
+    background: url('/wp-content/themes/jove/images/arrow_down_black.svg') no-repeat right center;
+}
+
+.sc_text_acc_container {
+    overflow-x: hidden;
+}
+
+.sc_related
+ {
+    gap: 12px;
+ }
+a.sc_sidebar_thumbnail img {display:block;}
+
+	.footer-heading.d-flex.justify-content-between.align-items-center {
+    pointer-events: none;
+}
+
+.homeup { font-size:18px;}
+
+
+a.sc_sidebar_thumbnail.disabled{ display:block;}
+
+
+
+
+
+.content-display-0 {
+    max-height: 360px;
+    overflow: hidden;
+    position: relative;
+}
+.content-display-0:after {
+    background: #FFF;
+    bottom: 0;
+    content: '';
+    display: block;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, #fff 79%, #fff 100%);
+}		</style>
+		    
+    <!-- Google Tag Manager -->
+	<script>
+		(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-PBRKW49');
+	</script>
+    <!-- End Google Tag Manager -->
+</head>
+<div id="jove_stats" style="display: none;">-1::1</div>
+<div class="statcounter" style="display: none;"><img class="statcounter lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="//c19.statcounter.com/counter.php?sc_project=2004211&amp;java=0&amp;security=18d74901&amp;invisible=1" alt="Simple Hit Counter"></div>
+<script type="text/javascript">
+    $ = jQuery; //to fix stats errors
+    $.getScript('https://stats.jove.com/stats.js');
+</script>
+<body class="article-template-default single single-article postid-50376 translatepress-en_US no-sidebar elementor-default elementor-kit-144">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PBRKW49"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+<div id="page" class="site">
+    <a class="skip-link screen-reader-text" href="#primary">Skip to content</a>
+
+    <header id="masthead" class="site-header">
+        <div class="header">
+            <div class="header-container">
+                <div class="header_menu_left">
+                    <div class="header_hamburger d-lg-none">
+                        <img class="open lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/hamburger.svg" />
+                        <img class="close lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/hamburger_close.svg" />
+                    </div>
+                    <a href="https://www.jove.com/">
+                        <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/logo_jove.svg" />
+                    </a>
+
+                    <div class="header_menu d-none d-lg-flex">
+
+                            <a class="" data-id="products">
+        <p>Products</p>
+        <img class="img_dark lazy loaded" src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg" data-src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg" data-was-processed="true">
+        <img class="img_blue lazy loaded" src="https://www.jove.com/wp-content/themes/jove/images/upblue.svg" data-src="https://www.jove.com/wp-content/themes/jove/images/upblue.svg" data-was-processed="true">
+    </a>
+    <a class="" data-id="solutions">
+        <p>Solutions</p>
+        <img class="img_dark lazy loaded" src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg" data-src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg" data-was-processed="true">
+        <img class="img_blue lazy loaded" src="https://www.jove.com/wp-content/themes/jove/images/upblue.svg" data-src="https://www.jove.com/wp-content/themes/jove/images/upblue.svg" data-was-processed="true">
+    </a>
+
+                    </div>
+                </div>
+
+                                    <div class="header_menu_middle">
+                        <form method="POST" class="header_input_wrapper">
+                            <input type="text" name="search" placeholder="Search or ask a question">
+                            <span class="clear-search" style="
+                                display:none;
+                                position: absolute;
+                                right: 60px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                cursor: pointer;
+                                font-size: 20px;
+                                color: #000;
+                            ">×</span>
+                            <button><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/glass.svg" /></button>
+                        </form>
+                    </div>
+                
+                <div class="header_menu_right disable-translate-press-plugin">
+                    
+                    <div class="header_righter d-flex d-lg-none">
+                        <form method='get' style="display: none;">
+                            <input type="text" name="s" id="mobile-search-input">
+                            <span class="clear-search" style="
+                                display:none;
+                                position: absolute;
+                                right: 15px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                cursor: pointer;
+                                font-size: 20px;
+                                color: #000;
+                                z-index: 10;
+                            ">×</span>
+                            <button style="display: none;">Go</button>
+                        </form>
+                        <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/glass.svg" />
+                                                    
+                            <a href="https://app.jove.com//v/68962/fine-tuning-large-language-models-using-entity-hallucination-index?trialstart=1&section=4" class="head_sign">
+                                Sign In
+                            </a>
+                                            </div>
+
+                    <div class="header_hamburger_search d-none d-lg-none">
+                        <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/looking_glass_black.svg" />
+                    </div>
+                    <div class="header_language  d-none d-lg-flex disable-translate-press-plugin">
+                            <div class="language_dropdown">
+        <img class="language_icon lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/language.svg" />
+        <p class="current_language">EN</p>
+        <img class="language_icon dropdown lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/arrow_right.svg" />
+
+        <div class="language_switcher_items">
+            <a class="language_switcher_item en_US active"  href="#" data-tooltip="English">EN - English<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item zh_CN "  href="https://www.jove.com/cn/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="简体中文">CN - 简体中文<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item de_DE "  href="https://www.jove.com/de/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="Deutsch">DE - Deutsch<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item es_ES "  href="https://www.jove.com/es/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="Español">ES - Español<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item ko_KR "  href="https://www.jove.com/kr/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="한국어">KR - 한국어<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item it_IT "  href="https://www.jove.com/it/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="Italiano">IT - Italiano<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item fr_FR "  href="https://www.jove.com/fr/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="Français">FR - Français<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item pt_BR "  href="https://www.jove.com/pt/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="Português do Brasil">PT - Português do Brasil<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item pl_PL "  href="https://www.jove.com/pl/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="Polski">PL - Polski<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item he_IL "  href="https://www.jove.com/he/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="עִבְרִית">HE - עִבְרִית<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item ru_RU "  href="https://www.jove.com/ru/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="Русский">RU - Русский<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item ja "  href="https://www.jove.com/ja/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="日本語">JA - 日本語<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item tr_TR "  href="https://www.jove.com/tr/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="Türkçe">TR - Türkçe<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a><a class="language_switcher_item ar "  href="https://www.jove.com/ar/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" data-tooltip="العربية">AR - العربية<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/checkmark.png"></a>        </div>
+    </div>
+                       
+                    <div class="header_divider d-none d-lg-flex"></div>
+
+
+                    
+
+                                                
+                            <a href="https://app.jove.com/auth/signin" class="header_sign_in">
+                                Sign In
+                            </a>
+
+                            <a href="https://app.jove.com//v/68962/fine-tuning-large-language-models-using-entity-hallucination-index?trialstart=1&section=4" class="header_free_trial d-none d-lg-flex">
+                                Start Free Trial
+                            </a>
+                                            
+                </div>
+
+            </div>
+        </div>
+
+        <div class="megamenu new_megamenu">
+                <div data-for="products" class="jove_menu_wrapper_outer" style="display: none;">
+        <div data-for="products" class="jove_menu_wrapper container s4">
+            <div class="style4 column research-column">
+                <p class="level1">RESEARCH</p>
+                <div class="level2-item"><a href="/research/journal" class="level2-link">
+                        <span class="level2-title">JoVE Journal</span>
+                    </a>
+                    <p class="level1-subtitle">Peer reviewed scientific video journal</p>
+                    <p class="level2-subtitle"></p>
+                    <div class="level3-container">
+                        <div class="level3-item"><a href="/research/journal/behavior" class="level3-link">
+                                <span class="level3-title ">Behavior</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/journal/biochemistry" class="level3-link">
+                                <span class="level3-title ">Biochemistry</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/journal/bioengineering" class="level3-link">
+                                <span class="level3-title ">Bioengineering</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/journal/biology" class="level3-link">
+                                <span class="level3-title ">Biology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/journal/cancer-research" class="level3-link">
+                                <span class="level3-title ">Cancer Research</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/journal/chemistry" class="level3-link">
+                                <span class="level3-title ">Chemistry</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/journal/developmental-biology" class="level3-link">
+                                <span class="level3-title ">Developmental Biology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/journal" class="level3-link">
+                                <span class="level3-title view-all-link">View All</span>
+                            </a></div>
+                    </div>
+                </div>
+                <div class="level2-item"><a href="/research/encyclopedia-of-experiments" class="level2-link">
+                        <span class="level2-title">JoVE Encyclopedia of Experiments</span>
+                    </a>
+                    <p class="level1-subtitle">Video encyclopedia of advanced research methods</p>
+                    <p class="level2-subtitle"></p>
+                    <div class="level3-container">
+                        <div class="level3-item"><a href="/research/encyclopedia-of-experiments/biological-techniques" class="level3-link">
+                                <span class="level3-title ">Biological Techniques</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/encyclopedia-of-experiments/biology" class="level3-link">
+                                <span class="level3-title ">Biology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/encyclopedia-of-experiments/cancer-research" class="level3-link">
+                                <span class="level3-title ">Cancer Research</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/encyclopedia-of-experiments/immunology" class="level3-link">
+                                <span class="level3-title ">Immunology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/research/encyclopedia-of-experiments/neuroscience" class="level3-link">
+                                <span class="level3-title ">Neuroscience</span>
+                            </a></div>
+						<div class="level3-item">
+							<a href="/research/encyclopedia-of-experiments/microbiology" class="level3-link">
+								<span class="level3-title">Microbiology</span>
+							</a>
+						</div>
+                    </div>
+                </div>
+                <div class="level2-item"><a href="https://visualize.jove.com/?utm_source=jove-header&utm_medium=x-nav" class="level2-link">
+                        <span class="level2-title">JoVE Visualize</span>
+                    </a>
+                    <p class="level1-subtitle">Visualizing science through experiment videos</p>
+                    <p class="level2-subtitle"></p>
+                    <div class="level3-container"></div>
+                </div>
+            </div>
+            <div class="style4 column education-column">
+                <p class="level1">EDUCATION</p>
+                <div class="level2-item"><a href="/education/core" class="level2-link">
+                        <span class="level2-title">JoVE Core</span>
+                    </a>
+                    <p class="level1-subtitle">Video textbooks for undergraduate courses</p>
+                    <p class="level2-subtitle"></p>
+                    <div class="level3-container">
+                        <div class="level3-item"><a href="/education/core/analytical-chemistry" class="level3-link">
+                                <span class="level3-title ">Analytical Chemistry</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/core/anatomy-and-physiology" class="level3-link">
+                                <span class="level3-title ">Anatomy and Physiology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/core/biology" class="level3-link">
+                                <span class="level3-title ">Biology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/science-education/calculus" class="level3-link">
+                                <span class="level3-title ">Calculus</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/core/cell-biology" class="level3-link">
+                                <span class="level3-title ">Cell Biology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/core/chemistry" class="level3-link">
+                                <span class="level3-title ">Chemistry</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/core/civil-engineering" class="level3-link">
+                                <span class="level3-title ">Civil Engineering</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/core/electrical-engineering" class="level3-link">
+                                <span class="level3-title ">Electrical Engineering</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/core" class="level3-link">
+                                <span class="level3-title view-all-link">View All</span>
+                            </a></div>
+                    </div>
+                </div>
+                <div class="level2-item"><a href="/education/science-education" class="level2-link">
+                        <span class="level2-title">JoVE Science Education</span>
+                    </a>
+                    <p class="level1-subtitle">Visual demonstrations of key scientific experiments</p>
+                    <p class="level2-subtitle"></p>
+                    <div class="level3-container">
+                        <div class="level3-item"><a href="/education/science-education/advanced-biology" class="level3-link">
+                                <span class="level3-title ">Advanced Biology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/science-education/basic-biology" class="level3-link">
+                                <span class="level3-title ">Basic Biology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/science-education/chemistry" class="level3-link">
+                                <span class="level3-title ">Chemistry</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/science-education" class="level3-link">
+                                <span class="level3-title view-all-link">View All</span>
+                            </a></div>
+                    </div>
+                </div>
+                <div class="level2-item"><a href="/education/lab-manual" class="level2-link">
+                        <span class="level2-title">JoVE Lab Manual</span>
+                    </a>
+                    <p class="level1-subtitle">Videos of experiments for undergraduate lab courses</p>
+                    <p class="level2-subtitle"></p>
+                    <div class="level3-container">
+                        <div class="level3-item"><a href="/education/lab-manual/biology" class="level3-link">
+                                <span class="level3-title ">Biology</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/education/lab-manual/chemistry" class="level3-link">
+                                <span class="level3-title ">Chemistry</span>
+                            </a></div>
+                    </div>
+                </div>
+            </div>
+            <div class="style4 column business-others-column">
+                <p class="level1">BUSINESS</p>
+                <div class="level2-item"><a href="/business-ed" class="level2-link">
+                        <span class="level2-title">JoVE Business</span>
+                    </a>
+                    <p class="level1-subtitle">Video textbooks for business education</p>
+                    <p class="level2-subtitle"></p>
+                    <div class="level3-container">
+
+                    <div class="level3-item"><a href="/business-ed/accounting" class="level3-link">
+                                <span class="level3-title ">Accounting</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/business-ed/finance" class="level3-link">
+                                <span class="level3-title ">Finance</span>
+                            </a></div>
+
+                            <div class="level3-item"><a href="/business-ed/macroeconomics" class="level3-link">
+                                <span class="level3-title ">Macroeconomics</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/business-ed/marketing" class="level3-link">
+                                <span class="level3-title ">Marketing</span>
+                            </a></div>
+                        <div class="level3-item"><a href="/business-ed/microeconomics" class="level3-link">
+                                <span class="level3-title ">Microeconomics</span>
+                            </a></div>
+                    </div>
+                </div>
+                <div class="level2-item menu-divider"></div>
+                <p class="level1">OTHERS</p>
+                <div class="level2-item"><a href="https://www.jove.com/quiz" class="level2-link">
+                        <span class="level2-title">JoVE Quiz</span>
+                    </a>
+                    <p class="level1-subtitle">Interactive video based quizzes for formative assessments</p>
+                    <p class="level2-subtitle"></p>
+                    <div class="level3-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-for="solutions" class="jove_menu_wrapper_outer simple_menu" style="display: none;">
+        <div data-for="solutions" class="jove_menu_wrapper container s3">
+            <div class="style4">
+                <a href="/research/journal" class="level3-link">
+                    <p>Authors</p>
+                </a>
+            </div>
+            <div class="style4">
+                <a href="https://app.jove.com/education" class="level3-link">
+                    <p>Teaching Faculty</p>
+                </a>
+            </div>
+            <div class="style4">
+                <a href="/librarians/overview" class="level3-link">
+                    <p>Librarians</p>
+                </a>
+            </div>
+            <div class="style4 disable-translate-press-plugin">
+                <a href="https://www.jove.com/schools" class="level3-link disable-translate-press-plugin">
+                    <p>K12 Schools</p>
+                </a>
+            </div>
+            <div class="style4 disable-translate-press-plugin">
+                <a href="https://www.jove.com/biopharma/" class="level3-link disable-translate-press-plugin">
+                    <p>Biopharma</p>
+                </a>
+            </div>
+        </div>
+    </div>
+        </div>
+
+        <div class="megamenu d-lg-none container">
+                <div class="jove_mobile_accordion_wrapper">
+        <div class="jove_mobile_accordion_selector aia">
+            <div class="accordion_submenu_wrapper">
+                <div class="accordion_submenu_text_wrapper">
+                    <p>Products</p>
+                    <div><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_down.svg"></div>
+                </div>
+                <div class="accordion_submenu_open_wrapper" style="display: none;">
+                    <div class="accordion_submenu jove_accordion_chapter new_submenu_heading" data-target="research">
+                        <p>RESEARCH</p>
+                        <div class="jove_accordion_link_wrapper new_submenu_product_wrapper">
+                            <div class="accordion_submenu_open ja_link_wrapper" data-target="journal">
+                                <div class="jove_menu_children_chapter_text">
+                                    <p>JoVE Journal</p>
+                                    <p class="jove_menu_children_chapter_subtitle">Peer reviewed scientific video journal</p>
+                                </div>
+                                <div><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg"></div>
+                            </div>
+                            <div class="accordion_submenu_open ja_link_wrapper" data-target="eoe">
+                                <div class="jove_menu_children_chapter_text">
+                                    <p>JoVE Encyclopedia of Experiments</p>
+                                    <p class="jove_menu_children_chapter_subtitle">Video encyclopedia of advanced research methods</p>
+                                </div>
+                                <div><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg"></div>
+                            </div>
+                            <div class="accordion_submenu_open ja_link_wrapper" data-target="visualize">
+                                <a href="https://visualize.jove.com/?utm_source=jove-header&utm_medium=x-nav" class="accordion_submenu_open accordion_submenu_link">
+                                    <div class="jove_menu_children_chapter_text">
+                                        <p>JoVE Visualize</p>
+                                        <p class="jove_menu_children_chapter_subtitle">Visualizing science through experiment videos</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion_submenu jove_accordion_chapter new_submenu_heading" data-target="education">
+                        <p>EDUCATION</p>
+                        <div class="jove_accordion_link_wrapper new_submenu_product_wrapper">
+                            <div class="accordion_submenu_open ja_link_wrapper" data-target="core">
+                                <div class="jove_menu_children_chapter_text">
+                                    <p>JoVE Core</p>
+                                    <p class="jove_menu_children_chapter_subtitle">Video textbooks for undergraduates</p>
+                                </div>
+                                <div><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg"></div>
+                            </div>
+                            <div class="accordion_submenu_open ja_link_wrapper" data-target="science_education">
+                                <div class="jove_menu_children_chapter_text">
+                                    <p>JoVE Science Education</p>
+                                    <p class="jove_menu_children_chapter_subtitle">Visual demonstrations of key scientific experiments</p>
+                                </div>
+                                <div><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg"></div>
+                            </div>
+                            <div class="accordion_submenu_open ja_link_wrapper" data-target="lab_manual">
+                                <div class="jove_menu_children_chapter_text">
+                                    <p>JoVE Lab Manual</p>
+                                    <p class="jove_menu_children_chapter_subtitle">Videos of experiments for undergraduate lab courses</p>
+                                </div>
+                                <div><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion_submenu jove_accordion_chapter new_submenu_heading" data-target="business">
+                        <p>BUSINESS</p>
+                        <div class="jove_accordion_link_wrapper new_submenu_product_wrapper">
+                            <div class="accordion_submenu_open ja_link_wrapper" data-target="business_2">
+                                <div class="jove_menu_children_chapter_text">
+                                    <p>JoVE Business</p>
+                                    <p class="jove_menu_children_chapter_subtitle">Video textbooks for business education</p>
+                                </div>
+                                <div><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion_submenu jove_accordion_chapter new_submenu_heading" data-target="others">
+                        <p>OTHERS</p>
+                        <div class="jove_accordion_link_wrapper new_submenu_product_wrapper">
+                            <div class="accordion_submenu_open ja_link_wrapper" data-target="quiz">
+                                <a href="https://www.jove.com/quiz" class="accordion_submenu_open accordion_submenu_link">
+                                    <div class="jove_menu_children_chapter_text">
+                                        <p>JoVE Quiz</p>
+                                        <p class="jove_menu_children_chapter_subtitle">Interactive video based quizzes for formative assessments</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion_submenu_wrapper">
+                <div class="accordion_submenu_text_wrapper">
+                    <p>Solutions</p>
+                    <div><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_down.svg"></div>
+                </div>
+                <div class="accordion_submenu_open_wrapper new_menu_solutions_wrapper" style="display: none;">
+                    <div class="accordion_submenu_link_wrapper"><a href="/research/journal" class="accordion_submenu_open accordion_submenu_link ja_link_wrapper"><span>Authors</span></a></div>
+                    <div class="accordion_submenu_link_wrapper"><a href="https://app.jove.com/education" class="accordion_submenu_open accordion_submenu_link ja_link_wrapper"><span>Teaching Faculty</span></a></div>
+                    <div class="accordion_submenu_link_wrapper"><a href="/librarians/overview" class="accordion_submenu_open accordion_submenu_link ja_link_wrapper"><span>Librarians</span></a></div>
+                    <div class="accordion_submenu_link_wrapper disable-translate-press-plugin"><a href="https://www.jove.com/schools" class="disable-translate-press-plugin accordion_submenu_open accordion_submenu_link ja_link_wrapper"><span>K12 Schools</span></a></div>
+                    <div class="accordion_submenu_link_wrapper"><a href="https://www.jove.com/biopharma/" class="accordion_submenu_open accordion_submenu_link ja_link_wrapper"><span>Biopharma</span></a></div>
+                  
+                </div>
+            </div>
+                <div class="megamenu_languages accordion_submenu_wrapper">
+        <div class="megam_lang_left"><p>Language</p></div>
+        <div class="megam_lang_right">
+            <p>English</p>
+            <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vfront.svg">
+        </div>
+    </div>
+    <div class="megam_languages">        <a href="#" class="active">
+            <p>EN</p>
+            <p>English</p>
+        </a>
+                <a href="https://www.jove.com/cn/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>CN</p>
+            <p>简体中文</p>
+        </a>
+                <a href="https://www.jove.com/de/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>DE</p>
+            <p>Deutsch</p>
+        </a>
+                <a href="https://www.jove.com/es/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>ES</p>
+            <p>Español</p>
+        </a>
+                <a href="https://www.jove.com/kr/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>KR</p>
+            <p>한국어</p>
+        </a>
+                <a href="https://www.jove.com/it/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>IT</p>
+            <p>Italiano</p>
+        </a>
+                <a href="https://www.jove.com/fr/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>FR</p>
+            <p>Français</p>
+        </a>
+                <a href="https://www.jove.com/pt/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>PT</p>
+            <p>Português do Brasil</p>
+        </a>
+                <a href="https://www.jove.com/pl/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>PL</p>
+            <p>Polski</p>
+        </a>
+                <a href="https://www.jove.com/he/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>HE</p>
+            <p>עִבְרִית</p>
+        </a>
+                <a href="https://www.jove.com/ru/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>RU</p>
+            <p>Русский</p>
+        </a>
+                <a href="https://www.jove.com/ja/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>JA</p>
+            <p>日本語</p>
+        </a>
+                <a href="https://www.jove.com/tr/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>TR</p>
+            <p>Türkçe</p>
+        </a>
+                <a href="https://www.jove.com/ar/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="">
+            <p>AR</p>
+            <p>العربية</p>
+        </a>
+        </div>        </div>
+        <ul class="language_options">
+            <div data-parent="products" class="jove_menu_row new_jove_submenu_wrapper">
+                <div data-for="journal" class="jove_accordion_column_outer">
+                    <div class="jove_accordion_back">
+                        <div><img class="vback lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vback.svg"></div>
+                        <p>Menu</p>
+                    </div>
+                    <p><a class="ja_head_link_wrapper" href="/research/journal"><strong>JoVE Journal</strong></a></p>
+                    <div class="jove_accordion_column_wrapper">
+                        <div class="jove_accordion_column">
+                            <div class="jove_accordion_chapter">
+                                <div class="jove_accordion_link_wrapper">
+                                    <a href="/research/journal/behavior" class="ja_link_wrapper">
+                                        <p>Behavior</p>
+                                    </a>
+                                    <a href="/research/journal/biochemistry" class="ja_link_wrapper">
+                                        <p>Biochemistry</p>
+                                    </a>
+                                    <a href="/research/journal/bioengineering" class="ja_link_wrapper">
+                                        <p>Bioengineering</p>
+                                    </a>
+                                    <a href="/research/journal/biology" class="ja_link_wrapper">
+                                        <p>Biology</p>
+                                    </a>
+                                    <a href="/research/journal/cancer-research" class="ja_link_wrapper">
+                                        <p>Cancer Research</p>
+                                    </a>
+                                    <a href="/research/journal/chemistry" class="ja_link_wrapper">
+                                        <p>Chemistry</p>
+                                    </a>
+                                    <a href="/research/journal/developmental-biology" class="ja_link_wrapper">
+                                        <p>Developmental Biology</p>
+                                    </a>
+                                    <a href="/research/journal/engineering" class="ja_link_wrapper">
+                                        <p>Engineering</p>
+                                    </a>
+                                    <a href="/research/journal/environment" class="ja_link_wrapper">
+                                        <p>Environment</p>
+                                    </a>
+                                    <a href="/research/journal/genetics" class="ja_link_wrapper">
+                                        <p>Genetics</p>
+                                    </a>
+                                    <a href="/research/journal/immunology-and-infection" class="ja_link_wrapper">
+                                        <p>Immunology and Infection</p>
+                                    </a>
+                                    <a href="/research/journal/medicine" class="ja_link_wrapper">
+                                        <p>Medicine</p>
+                                    </a>
+                                    <a href="/research/journal/neuroscience" class="ja_link_wrapper">
+                                        <p>Neuroscience</p>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-for="eoe" class="jove_accordion_column_outer">
+                    <div class="jove_accordion_back">
+                        <div><img class="vback lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vback.svg"></div>
+                        <p>Menu</p>
+                    </div>
+                    <p><a class="ja_head_link_wrapper" href="/research/encyclopedia-of-experiments"><strong>JoVE Encyclopedia of Experiments</strong></a></p>
+                    <div class="jove_accordion_column_wrapper">
+                        <div class="jove_accordion_column">
+                            <div class="jove_accordion_chapter">
+                                <div class="jove_accordion_link_wrapper">
+                                    <a href="/research/encyclopedia-of-experiments/biological-techniques" class="ja_link_wrapper">
+                                        <p>Biological Techniques</p>
+                                    </a>
+                                    <a href="/research/encyclopedia-of-experiments/biology" class="ja_link_wrapper">
+                                        <p>Biology</p>
+                                    </a>
+                                    <a href="/research/encyclopedia-of-experiments/cancer-research" class="ja_link_wrapper">
+                                        <p>Cancer Research</p>
+                                    </a>
+                                    <a href="/research/encyclopedia-of-experiments/immunology" class="ja_link_wrapper">
+                                        <p>Immunology</p>
+                                    </a>
+                                    <a href="/research/encyclopedia-of-experiments/neuroscience" class="ja_link_wrapper">
+                                        <p>Neuroscience</p>
+                                    </a>
+									<a href="/research/encyclopedia-of-experiments/microbiology" class="ja_link_wrapper">
+										<p>Microbiology</p>
+									</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-for="core" class="jove_accordion_column_outer">
+                    <div class="jove_accordion_back">
+                        <div><img class="vback lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vback.svg"></div>
+                        <p>Menu</p>
+                    </div>
+                    <p><a class="ja_head_link_wrapper" href="/education/core"><strong>JoVE Core</strong></a></p>
+                    <div class="jove_accordion_column_wrapper">
+                        <div class="jove_accordion_column">
+                            <div class="jove_accordion_chapter_wrapper">
+                                <div class="jove_accordion_chapter">
+                                    <div class="jove_accordion_link_wrapper">
+                                        <a href="/education/core/analytical-chemistry" class="ja_link_wrapper">
+                                            <p>Analytical Chemistry</p>
+                                        </a>
+                                        <a href="/education/core/anatomy-and-physiology" class="ja_link_wrapper">
+                                            <p>Anatomy and Physiology</p>
+                                        </a>
+                                        <a href="/education/core/biology" class="ja_link_wrapper">
+                                            <p>Biology</p>
+                                        </a>
+                                        <a href="/science-education/calculus" class="ja_link_wrapper">
+                                            <p>Calculus</p>
+                                        </a>
+                                        <a href="/education/core/cell-biology" class="ja_link_wrapper">
+                                            <p>Cell Biology</p>
+                                        </a>
+                                        <a href="/education/core/chemistry" class="ja_link_wrapper">
+                                            <p>Chemistry</p>
+                                        </a>
+                                        <a href="/education/core/civil-engineering" class="ja_link_wrapper">
+                                            <p>Civil Engineering</p>
+                                        </a>
+                                        <a href="/education/core/electrical-engineering" class="ja_link_wrapper">
+                                            <p>Electrical Engineering</p>
+                                        </a>
+                                        <a href="/education/core/introduction-to-psychology" class="ja_link_wrapper">
+                                            <p>Introduction to Psychology</p>
+                                        </a>
+                                        <a href="/education/core/mechanical-engineering" class="ja_link_wrapper">
+                                            <p>Mechanical Engineering</p>
+                                        </a>
+                                        <a href="/education/core/medical-surgical-nursing" class="ja_link_wrapper">
+                                            <p>Medical-Surgical Nursing</p>
+                                        </a>
+                                        <a href="/education/core" class="ja_link_wrapper new_submenu_view_all">
+                                            <p>View All</p>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-for="science_education" class="jove_accordion_column_outer">
+                    <div class="jove_accordion_back">
+                        <div><img class="vback lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vback.svg"></div>
+                        <p>Menu</p>
+                    </div>
+                    <p><a class="ja_head_link_wrapper" href="/education/science-education"><strong>JoVE Science Education</strong></a></p>
+                    <div class="jove_accordion_column_wrapper">
+                        <div class="jove_accordion_column">
+                            <div class="jove_accordion_chapter_wrapper">
+                                <div class="jove_accordion_chapter">
+                                    <div class="jove_accordion_link_wrapper">
+                                        <a href="/education/science-education/advanced-biology" class="ja_link_wrapper">
+                                            <p>Advanced Biology</p>
+                                        </a>
+                                        <a href="/education/science-education/basic-biology" class="ja_link_wrapper">
+                                            <p>Basic Biology</p>
+                                        </a>
+                                        <a href="/education/science-education/chemistry" class="ja_link_wrapper">
+                                            <p>Chemistry</p>
+                                        </a>
+                                        <a href="/education/science-education/clinical-skills" class="ja_link_wrapper">
+                                            <p>Clinical Skills</p>
+                                        </a>
+                                        <a href="/education/science-education/engineering" class="ja_link_wrapper">
+                                            <p>Engineering</p>
+                                        </a>
+                                        <a href="/education/science-education/environmental-sciences" class="ja_link_wrapper">
+                                            <p>Environmental Sciences</p>
+                                        </a>
+                                        <a href="/education/science-education/physics" class="ja_link_wrapper">
+                                            <p>Physics</p>
+                                        </a>
+                                        <a href="/education/science-education/psychology" class="ja_link_wrapper">
+                                            <p>Psychology</p>
+                                        </a>
+                                        <a href="/education/science-education" class="ja_link_wrapper new_submenu_view_all">
+                                            <p>View All</p>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-for="lab_manual" class="jove_accordion_column_outer">
+                    <div class="jove_accordion_back">
+                        <div><img class="vback lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vback.svg"></div>
+                        <p>Menu</p>
+                    </div>
+                    <p><a class="ja_head_link_wrapper" href="/education/lab-manual"><strong>JoVE Lab Manual</strong></a></p>
+                    <div class="jove_accordion_column">
+                        <div class="jove_accordion_chapter">
+                            <div class="jove_accordion_link_wrapper">
+                                <a href="/education/lab-manual/biology" class="ja_link_wrapper">
+                                    <p>Biology</p>
+                                </a>
+                                <a href="/education/lab-manual/chemistry" class="ja_link_wrapper">
+                                    <p>Chemistry</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-for="business_2" class="jove_accordion_column_outer">
+                    <div class="jove_accordion_back">
+                        <div><img class="vback lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/vback.svg"></div>
+                        <p>Menu</p>
+                    </div>
+                    <p><a class="ja_head_link_wrapper" href="/business-ed"><strong>JoVE Business</strong></a></p>
+                    <div class="jove_accordion_column_wrapper">
+                        <div class="jove_accordion_column">
+                            <div class="jove_accordion_chapter">
+                                <div class="jove_accordion_link_wrapper">
+
+                                    <a href="/business-ed/accounting" class="ja_link_wrapper">
+                                        <p>Accounting</p>
+                                    </a>
+                                    <a href="/business-ed/finance" class="ja_link_wrapper">
+                                        <p>Finance</p>
+                                    </a>
+                                    <a href="/business-ed/macroeconomics" class="ja_link_wrapper">
+                                        <p>Macroeconomics</p>
+                                    </a>
+                                    <a href="/business-ed/marketing" class="ja_link_wrapper">
+                                        <p>Marketing</p>
+                                    </a>
+                                    <a href="/business-ed/microeconomics" class="ja_link_wrapper">
+                                        <p>Microeconomics</p>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ul>
+        <a class="megalink" href="https://app.jove.com/?trialstart=1&section=1">Start Free Trial</a>
+    </div>
+        </div>
+
+        <form method="POST" class="header_input_wrapper mb">
+            <input type="text" name="search" placeholder="Search"> 
+            <button type="submit"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/glass.svg" /></button>
+        </form>
+
+    </header><!-- #masthead -->
+
+    <!-- Loading Overlay for IP Redirect -->
+    <div id="jove-redirect-overlay" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: rgba(255, 255, 255, 1);
+        z-index: 99999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        visibility: hidden;
+    ">
+        <div style="text-align: center;">
+            <div style="
+                width: 50px;
+                height: 50px;
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #0073aa;
+                border-radius: 50%;
+                animation: jove-spin 1s linear infinite;
+                margin: 0 auto 16px;
+            "></div>
+            <div style="
+                color: #333;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 16px;
+            ">Loading...</div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes jove-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #jove-redirect-overlay.visible {
+            visibility: visible !important;
+        }
+        
+        body.jove-overlay-active {
+            overflow: hidden !important;
+        }
+    </style>
+
+    <div class="menu-overlay"></div>
+<input type="hidden" id="access_level" value="2"/>    
+<body class="video">
+        
+    <div class="container fme article">
+
+    
+        <div class="breadcrumbs d-flex">
+            <a href="https://www.jove.com" class="breadcrumb color" data-tooltip="Home">
+                <div class="breadcrumb_text">
+                    Home
+                </div>
+                <div class="breadcrumb_icon">
+                    <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/arrow_right.svg" />
+                </div>
+            </a>
+            <a href="https://www.jove.com/research/journal" class="breadcrumb color" data-tooltip="JoVE Journal">
+                <div class="breadcrumb_text">
+                    JoVE Journal                </div>
+                <div class="breadcrumb_icon">
+                    <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/arrow_right.svg" />
+                </div>
+            </a>
+
+            <a href="https://www.jove.com/research/journal/engineering" class="breadcrumb color" data-tooltip="Engineering"><div class="breadcrumb_text">Engineering</div>                <div class="breadcrumb_icon">
+                    <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/arrow_right.svg" />
+                </div>
+                </a>            <a class="breadcrumb" data-tooltip="Fine-Tuning Large Language Models Using Entity Hallucination Index for Text Summarization">
+                <div class="breadcrumb_text">
+                    Fine-Tuning Large Language Models Using Entity Hallucination Index for Text Summarization                </div>
+            </a>
+        </div>
+    
+        </div>
+    <script type="application/ld+json">{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "name": "Fine-Tuning Large Language Models Using Entity Hallucination Index for Text Summarization",
+    "@id": "https://www.jove.com/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index#breadcrumblist",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "item": {
+                "@type": "CollectionPage",
+                "name": "Home",
+                "@id": "https://www.jove.com"
+            }
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "item": {
+                "@type": "CollectionPage",
+                "name": "JoVE Journal",
+                "@id": "https://www.jove.com/research/journal"
+            }
+        },
+        {
+            "@type": "ListItem",
+            "position": 3,
+            "item": {
+                "@type": "CollectionPage",
+                "name": "Engineering",
+                "@id": "https://www.jove.com/research/journal/engineering"
+            }
+        },
+        {
+            "@type": "ListItem",
+            "position": 4,
+            "item": {
+                "@type": "WebPage",
+                "name": "Fine-Tuning Large Language Models Using Entity Hallucination Index for Text Summarization",
+                "@id": "https://www.jove.com/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index"
+            }
+        }
+    ]
+}</script>
+	     <div class="subscription_required">
+        <div class="container">
+            <p>A subscription to JoVE is required to view this content. <a href="https://app.jove.com//v/68962/fine-tuning-large-language-models-using-entity-hallucination-index?trialstart=1&section=4">Sign in or start your free trial.</a></p>
+        </div>
+    </div>
+	    
+    <div class="sidebar_content container">
+        <div class="sc_content sc_text_content">
+        
+            
+            <div class="sc_duration_wrapper">
+
+                <div class="text_version_wrapper">
+                    <p>Research Article</p>
+                    <h1>Fine-Tuning Large Language Models Using Entity Hallucination Index for Text Summarization</h1>
+                    <div class="sc_doi_wrapper">
+                                                <p class="sc_doi">DOI: <a href="https://dx.doi.org/10.3791/68962">10.3791/68962</a></p>
+                        <div class="sc_dot"></div>
+                                                <p>
+                        <div class="pub_date">January 9, 2026</div> 
+                            
+                        
+                        </p>
+                    </div>
+
+                    <div class="sc_duration_lower authors_institutions">
+                        <p><a rel='author' target='_blank' href='https://app.jove.com/author/72851/praveenkumar-k'><span class='j-article-author'>Praveenkumar K.<sup class="j-author-sup">1,2</sup></span></a>, <a rel='author' target='_blank' href='https://app.jove.com/author/72852/rakesh-chandra-balabantaray'><span class='j-article-author'>Rakesh Chandra Balabantaray<sup class="j-author-sup">1</sup></span></a>, <a rel='author' target='_blank' href='https://app.jove.com/author/72853/kali-prasad-vittala'><span class='j-article-author'>Kali Prasad Vittala<sup class="j-author-sup">2</sup></span></a>, <a rel='author' target='_blank' href='https://app.jove.com/author/72854/muktikanta-sahu'><span class='j-article-author'>Muktikanta Sahu<sup class="j-author-sup">1</sup></span></a></p>
+                        <p><a target='_blank' href='https://app.jove.com/institutions/157284/international-institute-of-information-technology'><sup class='j-inst-sup'>1</sup><span class='j-article-inst-dept'>Computer Science Department</span>,<span class='j-article-inst'>International Institute of Information Technology</span></a>, <a target='_blank' href='https://app.jove.com/institutions/157285/informatica-business-solutions'><sup class='j-inst-sup'>2</sup><span class='j-article-inst-dept'>Global Customer Success</span>,<span class='j-article-inst'>Informatica Business Solutions</span></a></p>
+                    </div>
+                </div>
+
+                <div class="sc_duration_top">
+
+                    <div class="sc_duration_left">
+                        <div class="text_version_buttons">
+
+                            <a target="_blank" href="https://review.jove.com/api/articles/v0/GetRIS.php?id=68962" class="sc_video_button sc_button d-none d-lg-block">
+                                Cite
+                            </a>
+
+                            <a href="https://www.jove.com/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="sc_video_button sc_button d-block d-lg-none">
+                                Watch
+                            </a>
+
+                            <a target="_blank" href="https://app.jove.com/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index?trialstart=1" class="sc_video_button sc_button sc_button2 d-none d-lg-block">
+                                Download PDF
+                            </a>
+
+                            <a  target="_blank" href="https://app.jove.com/t/68962/fine-tuning-large-language-models-using-entity-hallucination-index?trialstart=1" class="sc_video_button sc_button sc_button2 d-none d-lg-block">
+                                Download Material list
+                            </a>
+
+                        </div>
+                    </div>
+
+                    <div class="sc_duration_right">
+                        <a href="https://app.jove.com/auth/signin?redirectTo=/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="bookmark"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/bookmark.svg" /></a>
+                    </div>
+
+                </div>
+
+                 
+            </div>
+
+            <div class="sc_text sc_text_only">
+
+                <div class="sc_text_sidebar">
+                    
+                    <div class="sc_text_sidebar_list">
+                        <p class="in_this">In This Article</p>
+                        <!-- <a class="active" href="#erratum">Erratum Notice</a>
+                        <a class="" href="#retraction">Retraction Notice</a> -->
+                        <a class="" href="#summary">Summary</a>
+                        <a class="" href="#abstract">Abstract</a>
+                        <a class="" href="#introduction">Introduction</a>
+                        <a class="" href="#protocol">Protocol</a>
+                        <a class="" href="#rep-res">Representative Results</a>
+                        <a class="" href="#discussion">Discussion</a>
+                        <a class="" href="#disclosures">Disclosures</a>
+                        <a class="" href="#ackn">Acknowledgements</a>
+                        <a class="" href="#materials">Materials</a>
+                        <a class="" href="#references">References</a>
+                        <a class="" href="#reprints">Reprints and Permissions</a>
+                    </div>
+                </div>
+
+                <div class="sc_text_wrapper" style="max-width:96%" >
+
+                    <div class="anchor_tag" id="erratum"></div>
+                    <div style="display:none" class="erratum">
+                        <p><strong>Erratum Notice</strong></p>
+                        <p>Important: There has been an erratum issued for this article. <a href="#">View Erratum Notice</a></p>
+                    </div>
+
+                    <a class="anchor_tag" id="retraction"></a>
+                    <div style="display:none" class="erratum retraction">
+                        <p><strong>Retraction Notice</strong></p>
+                        <p>The article Assisted Selection of Biomarkers by Linear Discriminant Analysis Effect Size (LEfSe) in Microbiome Data (10.3791/61715) has been retracted by the journal upon the authors' request due to a conflict regarding the data and methodology. <a href="#">View Retraction Notice</a></p>
+                    </div>
+                                        <div class="sc_text_acc">
+                        <div class="anchor_tag" id="summary"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Summary</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container">
+                            <p class="jove_content">We propose a reinforcement-learning-based fine-tuning approach for large language models that uses the Enti&#8239;Hallucination&#8239;Index (EHI) as a reward signal to reduce entity-level hallucination in text summarization. Experiments on meeting transcripts show that this method improves entity faithfulness and accuracy.</p>                        </div>
+                    </div>
+                                        
+                                        <div class="sc_text_acc">
+                        <div class="anchor_tag" id="abstract"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Abstract</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container">
+                            <p class="jove_content">Recent advancements in large language models (LLMs) have led to notable improvements in abstractive summarization quality. However, hallucination - especially entity-level hallucination where non-existent or incorrect entities are introduced - remains a critical challenge. In this work, we propose a reward-driven fine-tuning framework for summarization models using the Entity Hallucination Index (EHI) as a guiding metric. The methodology here begins with generating initial summaries from pre-trained models such as Flan-T5, DistilBART, and Mistral (or other popular LLM) on structured transcript datasets, XSUM. We compute EHI by extracting named entities from both generated summaries and gold references, evaluating precision, and penalizing fabricated entities. The fine-tuning process is guided by reinforcement learning, where EHI serves as the reward signal. We adopt a REINFORCE-style update mechanism to optimize the summarization model towards maximizing entity faithfulness. Experiments demonstrate that models fine-tuned with EHI achieve lower hallucination rates without compromising informativeness. Furthermore, we show that EHI-guided models generalize better on out-of-domain summarization tasks, suggesting enhanced robustness. The approach here offers a practical direction for improving factuality in summarization, emphasizing the critical role of accurate entity representation.</p>                        </div>
+                    </div>
+                                        
+                    
+                                        <div class="sc_text_acc">
+                        <div class="anchor_tag" id="introduction"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Introduction</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container content-display-0" >
+                            <p class="jove_content">Abstractive summarization models, powered by large language models (LLMs), have achieved impressive results across various domains. However, a persistent challenge remains hallucination, where generated summaries include incorrect or fabricated information not grounded in the source input<sup class="xref">1</sup><sup>,</sup><sup class="xref">2</sup>. In high-stakes applications such as meeting summarization, medical reporting, or financial documentation, hallucinations, particularly involving named entities, can significantly undermine trustworthiness and utility<sup class="xref">3</sup>.</p>
+<p class="jove_content"><strong>R</strong>esearchers conducted a large-scale human evaluation and found that summarizers frequently produce hallucinations -- content that is not supported by the source document -- and that these hallucinations correlate with repetition and incoherence<sup class="xref">1</sup>. Another study showed that models with higher abstractiveness tend to be less faithful; their study reported that outputs with more abstraction had lower factual accuracy and more unfaithful sentences<sup class="xref">2</sup>. The FRANK benchmark reported that roughly 30% of summaries contain factual inconsistencies, and another popular study noted similar error rates, arguing that high hallucination levels render summaries virtually useless<sup class="xref">1</sup><sup>,</sup><sup class="xref">2</sup>. Hallucinations can be categorized as intrinsic (contradicting the source) or extrinsic (not verifiable from the source). A tutorial on hallucinations in abstractive summarization explains that intrinsic hallucinations occur when generated content contradicts the input (e.g., misreporting an approved vaccine as being rejected), while extrinsic hallucinations add unverifiable facts, such as claiming clinical trials for a vaccine that are not mentioned<sup class="xref">4</sup>. It also reported that state-of-the-art summarizers produce hallucinated content in roughly 25% of their outputs when evaluated with ROUGE, BLEU, and METEOR, and cautions that hallucinations can be harmful in domains such as health, law, or cybersecurity.</p>
+<p class="jove_content">Traditional n-gram metrics (ROUGE<sup class="xref">5</sup>, BLEU, METEOR) correlate poorly with human judgments of factuality, prompting the development of reference-based and reference-free metrics<sup class="xref">6</sup>. QA-based metrics such as FEQA and QuestEval evaluate summaries by asking whether question-answer pairs derived from the summary can be answered using the source text. FEQA correlates more strongly with human judgments and shows that more abstractive summaries tend to be less faithful, whereas QuestEval substantially improves correlation with human judgments across consistency, coherence, fluency, and relevance. QAFactEval refines this approach by selecting noun-phrase answers and generating questions before answering them; this strategy improves correlation with human assessments on the SummaC benchmark. Information-extraction (IE) metrics represent knowledge as subject-relation-object tuples, but they are vulnerable to errors in the extraction process. Natural language inference (NLI) metrics -- such as FactCC and SummaC -- classify summary sentences as entailed or contradicted by the source<sup class="xref">4</sup>. FactCC uses weakly supervised data to train a classifier that detects factual consistency and highlights inconsistent spans<sup class="xref">2</sup>. SummaC applies NLI models at the appropriate granularity and yields strong factuality estimates, but the FRANK benchmark notes that these metrics still treat factuality as binary and lack a unified framework<sup class="xref">1</sup><sup>,</sup><sup class="xref">7</sup><sup>,</sup><sup class="xref">8</sup>. Human evaluation dimensions proposed by researchers fluency, coherence, relevance and consistency are widely adopted<sup class="xref">9</sup>. Another evaluation study emphasizes that consistency is the most objective dimension because it simply checks whether the summary is entailed by the source; it points out that up to 92% of XSum summaries contain faithfulness errors<sup class="xref">9</sup><sup>,</sup><sup class="xref">10</sup>. However, human evaluation is time-consuming and expensive, so automatic metrics are essential for scalable evaluation<sup class="xref">8</sup>. Current metrics often aggregate intrinsic and extrinsic hallucinations into a single score, hindering error diagnosis<sup class="xref">4</sup>.</p>
+<p class="jove_content">Since maximum-likelihood training does not directly optimize for summary quality, reinforcement learning (RL) has been applied to improve relevance and factuality. Pasunuru and Bansal introduced a multi-reward RL framework that combines saliency (ROUGE) and entailment rewards and demonstrated state-of-the-art performance<sup class="xref">11</sup>. RL was applied for extractive summarization using the REINFORCE algorithm; their model maximizes ROUGE scores and yields more informative summaries than classifier-based approaches, as shown by human question-answering evaluations<sup class="xref">12</sup>. Multi-task models further incorporate question generation and entailment generation to ensure coverage and coherence<sup class="xref">12</sup>. A comprehensive 2024 survey on abstractive summarization highlights factual consistency as a fundamental challenge and advocates RL to encourage truthful summarization. The survey suggests rewarding factually consistent summaries and incorporating external knowledge sources and attribute control to enhance accuracy<sup class="xref">13</sup>. RL from human feedback (RLHF) extends this idea by training a reward model on human preferences and fine-tuning the summarizer to maximize this learned reward<sup class="xref">9</sup>. Reinforcement learning from human feedback (RLHF) has gained traction for aligning model outputs with desired qualities, such as factuality and helpfulness<sup class="xref">4</sup><sup>,</sup><sup class="xref">14</sup>.<sup>While multi</sup>-reward RL and RLHF align models with human notions of fidelity, they rely on coarse metrics like ROUGE or binary factuality. In contrast, the work detailed here proposes using a fine-grained entity-level hallucination index as the reward, which is empirical and computationally less expensive without human feedback.</p>
+<p class="jove_content">Despite numerous metrics, several limitations persist. N-gram metrics ignore semantic correctness, QA-based and IE-based metrics propagate errors from question generation and extraction models, and NLI metrics reduce factuality to binary entailment decisions<sup class="xref">1</sup><sup>,</sup><sup class="xref">4</sup><sup>,</sup><sup class="xref">6</sup>. In the research work, it was emphasized that existing model-based metrics struggle to identify hallucinations at a fine granularity because they operate at the sentence or document level and cannot isolate specific entities causing errors<sup class="xref">4</sup>. Human evaluations remain the gold standard but are costly and subjective<sup class="xref">15</sup>. Moreover, existing metrics do not distinguish between intrinsic and extrinsic hallucinations or capture the over and under-focus of relations<sup class="xref">1</sup>. Large language models can hallucinate because they predict text based on statistical likelihood rather than factual verification. Models generate confident but incorrect outputs due to limitations in training data, probabilistic generation and lack of fact-checking, and overconfidence and biases can cause them to state false information with high certainty; the guide advocates retrieval-augmented generation and long-term memory to ground models in external data<sup class="xref">15</sup>. However, these techniques focus on retrieval-based tasks; summarization still requires metrics that identify and penalize hallucinated entities.&#160;Prior work has recognized the importance of entity-level evaluation for factuality. Metrics like FEQA and QuestEval attempt to assess factual consistency using question answering techniques<sup class="xref">16</sup><sup>,</sup><sup class="xref">17</sup>. However, these methods often require reference summaries or external QA systems, limiting scalability. Our work builds on this line by employing the Entity Hallucination Index (EHI), a lightweight empirical metric focusing specifically on named entity faithfulness by categorizing the entities into five types of hallucination factors as depicted in <strong class="xfig">Figure 1</strong>.</p>
+<p class="jove_content">Evidence indicates that hallucination is pervasive, evaluation metrics are imperfect, and RL techniques lack fine-grained rewards. Human studies show that summarization models hallucinate in a significant fraction of cases, often swapping entities or fabricating details<sup class="xref">9</sup>. Existing metrics either emphasize n-gram overlap or treat factuality as binary, and current RL methods optimize ROUGE or coarse factuality signals. There is a gap for entity-level metrics that measure when a summary mentions entities that are not present in the source (Negative hallucination), omits key entities (Lost focus hallucination), and other scenarios. The proposed fine-tuning method over Entity Hallucination Index (EHI) fills this gap by quantifying hallucinations at the entity level and providing a structured reward for reinforcement learning. By integrating EHI into RLHF, we aim to fine-tune large language models to minimize entity-level hallucination and produce summaries that are both fluent and factually faithful.</p>
+<p class="jove_content">In this work, we propose a novel fine-tuning approach that leverages the Entity Hallucination Index (EHI) as a reward signal to reduce hallucinations at the entity level. EHI quantifies the correctness and grounding of entities by comparing extracted entities from model outputs to those present in the input document, enabling a reduction in dependency on references<sup class="xref">18</sup>. The method described here biases the model towards producing more entity-faithful summaries without requiring human factuality annotations.</p>
+<p class="jove_content">In summary, factuality-aware reward models have been used for fine-tuning<sup class="xref">19</sup><sup>,</sup><sup class="xref">20</sup>. Unlike previous approaches that rely on coarse factuality rewards or human-labeled datasets, we propose fine-tuning using EHI as a direct, automatic reward signal, thereby promoting entity-grounded summarization without additional supervision. The novel contributions of this study are as follows: (i) the study introduces an EHI-guided fine-tuning framework that improves entity faithfulness in abstractive summarization, (ii) the study presents a scalable reinforcement learning pipeline that does not depend on human-labeled factuality datasets, (iii) the study demonstrates empirical improvements in EHI scores across meeting transcript datasets, XSUM news dataset and conduct qualitative analysis to highlight reductions in hallucination, (iv) the study shares a reproducible Colab-based implementation<sup> </sup>to facilitate further research on hallucination-aware summarization<sup class="xref">21</sup>.</p>
+<p class="jove_content">This study assesses the hypothesis that optimizing language models with fine-grained entity-focused rewards like EHI provides an effective pathway for enhancing faithfulness and reliability in summarization tasks with minimal computation. The approach contributes to the growing field of parameter-efficient fine-tuning for faithfulness in summarization by: (i) demonstrating effectiveness across both encoder-decoder (DistilBART, FlanT5) and decoder-only (Mistral) architectures, (ii) providing a framework that can be adapted to different model types, domains, and scales, and (iii) offering computational efficiency compared to full retraining.</p>                        </div>
+                    </div>
+                    
+                                        
+                                        <div class="sc_text_acc">
+                        <div class="anchor_tag" id="protocol"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Protocol</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container  content-display-0">
+                        <p class="jove_content">The objective of this study is to fine-tune a language model (LM) to generate summaries with reduced entity hallucination. Hallucinations occur when a model &#34;confidently produces incorrect or irrelevant output&#34; because it generates text according to statistical likelihood rather than factual verification. This is achieved by designing a reward function based on the Entity Hallucination Index (EHI) and applying reinforcement learning to maximize it.</p>
+<p class="jove_content"><strong>Problem formulation</strong><br />
+Given an input document X<sub>i</sub>, the goal is to generate a summary Y<sub>i</sub> such that entities mentioned in Y<sub>i</sub> are grounded in X<sub>i</sub>. Traditional maximum likelihood training does not explicitly optimize factual consistency. These training methods do not penalize the inclusion of fabricated entities. Therefore, a reward-driven fine-tuning strategy is introduced where the reward is proportional to entity faithfulness, measured using EHI.</p>
+<p class="jove_content"><strong>Data set and method</strong><br />
+Two corpora are used: firstly, a dialogue transcription dataset of multi-turn meeting transcripts and abstractive gold summaries, and secondly, the XSUM news summarization benchmark<sup class="xref">22</sup><sup>,</sup><sup class="xref">23</sup>. Each dataset was cleaned, flattened, and split into 80% train, 10% validation, and 10% test partitions. Dialogues are rich in informal language and pronouns, whereas XSUM contains concise news articles; the combination allows us to evaluate both in-domain and out-of-domain generalization.</p>
+<p class="jove_content">Entity extraction is performed on both source documents and summaries for computing the Entity Hallucination Index (EHI). During fine-tuning, this study exclusively utilize the training split, while validation EHI scores are monitored to select the best checkpoint. Final evaluations are reported on the held-out test set, which remains zero-shot before and after the fine-tuning of the models.</p>
+<p class="jove_content">In summary, firstly, transcripts are organized into a flattened format and split the data. The pre-trained model generates baseline summaries. Secondly, EHI is computed using transformer-based NER and the five hallucination factors. During fine-tuning, the model is updated with the EHI reward via LoRa adapters. Finally, summaries are generated using the fine-tuned model and evaluated using EHI, Entity F1, and other metrics (<strong class="xfig">Figure 2</strong>). All experiments are reproducible through the provided code and configuration files. <strong class="xfig">Figure 3</strong> shows the stepwise process flow for dataset preparation, baseline summarisation, EHI computation, fine-tuning, and evaluation.</p>
+<p class="jove_content"><strong>Baseline summarization</strong><br />
+Three pre-trained LLMs are chosen, and their baseline summarizations are captured: Flan-T5, Mistral (Nous-Hermes-2-Mistral-7B-DPO), and DistilBART<sup class="xref">24</sup><sup>,</sup><sup class="xref">25</sup><sup>,</sup><sup class="xref">26</sup>. Each model was run in zero-shot mode to produce an initial summary (Y<sub>i</sub>) for every input document(x<sub>i</sub>). Beam search with a beam width of 4 and a length penalty of 1.0 was used to encourage fluent yet concise summaries. These baseline summaries served to estimate the prevalence of hallucination and provided starting points for fine-tuning.</p>
+<p class="jove_content"><strong>Entity extraction and EHI computation</strong><br />
+Accurately computing the Entity Hallucination Index (EHI) requires robust NER. Initially, Spacy was used for NER operations. It is understood that transformer-based NER models are more accurate, but Spacy was the initial choice for the following reasons: (1) Transformer-based NER models themselves have proven to hallucinate than Spacy. (2) Spacy being statistical brings in computational efficiency in terms of implementation cost and execution time. (3) It also helps us prove that EHI is robust in reducing hallucination even with a weaker NER model. However, given the fact that the experiments are done on established datasets and spaCy&#39;s en_core_web_sm model is brittle on colloquial transcripts<sup class="xref">13</sup>. Spacy is replaced with a transformer-based NER model (dslim/bert-base-NER), which is a BERT model fine-tuned on the CoNLL-2003 dataset. BERT-based NER systems have been shown to outperform spaCy models on domain-specific tasks-for example, an Aviation-BERT-NER model reached an F1 of 94.78% while identifying 17 entities compared with 93.73% for spaCy NER that recognized seven entities<sup class="xref">27</sup>. The BERT NER model was configured via Hugging Face Transformers<sup class="xref">28</sup> and performed case-insensitive matching. To capture pronouns and surface-form variations, this method additionally applied simple rules that map &#34;Mr. Smith&#34; and &#34;Smith&#34; to the same canonical form; however, full coreference resolution remains future work. The comparative analysis of the NER models on a sample of 200 records from XSUM dataset can be inferred from <strong>Table 1</strong>.</p>
+<p class="jove_content">The Entity Hallucination Index (EHI) is calculated as:</p>
+<p class="jove_content"><img class="lazy" alt="Equation 1" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962eq1.jpg" style="margin: auto;" /></p>
+<p class="jove_content">where PH, EF, OF, NH, LF represent scores corresponding to Positive Hallucination (PH), Extractiveness Factor (EF), Negative Hallucination (NH), Overfocused Entities (OF), and Lost Focus (LF), respectively, for article i.</p>
+<p class="jove_content">Details of hallucination factors:</p>
+<p class="jove_content"><strong>Positive Hallucination (PH): </strong>Measures of newly introduced entities that are factually correct and beneficial.</p>
+<p class="jove_content"><strong>Extractiveness Factor (EF):</strong> Measures entities accurately extracted from the input document into the summary.</p>
+<p class="jove_content"><strong>Negative Hallucination (NH): </strong>Captures hallucinated entities that are incorrect or not grounded in the input.</p>
+<p class="jove_content"><strong>Over Focused (OF):</strong> Penalizes summaries that overly focus on a narrow subset of entities, missing diversity.</p>
+<p class="jove_content"><strong>Lost Focus (LF): </strong>Penalizes summaries that omit important entities present in the input.</p>
+<p class="jove_content">Computation of above factors is detailed in <strong class="xfig">Figure 4</strong> with a sample computation for illustration purposes. Considering an example of Input Document Entities (I):&#34; John&#34;,&#34; AI&#34;,&#34; conference&#34; Reference Summary Entities (R):&#34; John&#34;,&#34; AI&#34; Generated Summary Entities (G):&#34; John&#34;,&#34; AI&#34;,&#34; technology&#34;. Higher values of EHI indicate better entity faithfulness, rewarding summaries that are both extractive and positively hallucinated (introducing useful but faithful entities), while penalizing ungrounded, excessive, or missing entity<sup class="xref">20</sup>. These factors were normalized by the total number of detected entities to produce an EHI score between 0 and 1. EHI validation was monitored during training to select the best checkpoint. PH and EF reward beneficial new entities and correct extraction, whereas OF, NH, and LF penalize repetition, fabrication, and omission. A perfect score of 1.0 means that all entities in the summary are grounded or beneficially hallucinated, while a score of 0 indicates that no named entity in the summary appears in the source.</p>
+<p class="jove_content"><strong>Fine - tuning procedure with RL</strong><br />
+The detailed hyperparameter configuration for fine-tuning are provided separately in <strong>Table 2, Table 3,</strong> and <strong>Table 4</strong>, which depict optimizer types, learning rates, batch sizes, hardware specifications, and other configuration details for Mistral-7B, DistilBart, and Flan-T5, respectively. The objective here is to fine-tune the model parameters <em>&#952;</em> by maximizing the expected Entity Hallucination Index (EHI) reward across generated summaries. Formally, for an input document X<sub>i</sub>, a generated summary Y<sub>i</sub>, and model parameters&#160;<em>&#952;</em> the expected reward objective is defined as:</p>
+<p class="jove_content"><img class="lazy" alt="Equation 2" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962eq2.jpg" style="margin: auto;" />&#160; &#160; &#160;(2)</p>
+<p class="jove_content">where EHI (y, x) denotes the Entity Hallucination Index computed between the generated summary Y<sub>i</sub> and the input X<sub>i</sub>.</p>
+<p class="jove_content">Following the REINFORCE algorithm<sup class="xref">25</sup>, the gradient of this objective is estimated as:</p>
+<p class="jove_content"><img class="lazy" alt="Equation 3" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962eq3.jpg" style="margin: auto;" />&#160; &#160; &#160; (3)</p>
+<p class="jove_content">In practice, summaries were sampled from the models, their corresponding EHI scores were computed, and policy gradient updates were applied to encourage higher-reward outputs. To enable parameter-efficient fine-tuning, this study used Low-Rank Adaptation (LoRA). Only LoRA adapters were updated while the base model weights remained frozen. Fine-tuning was performed on an A100 GPU with a small learning rate (e.g., 5&#160;&#215; 10<sup>-6</sup>), batch size of 4 and gradient accumulation over 8 steps with Adam optimizer<sup class="xref">29</sup>. Summaries were regenerated every 500 updates to refresh reward estimates, and training continued until validation EHI converged. The REINFORCE baseline was set to the running average of recent rewards to reduce variance. In addition to EHI, Entity F1<sup>2</sup>, ROUGE-1/2/L scores were logged to monitor general quality. Summaries are regenerated periodically to reflect model improvements during fine-tuning.</p>
+<p class="jove_content"><strong>Evaluation metrics</strong><br />
+The outputs were evaluated using Informativeness metrics like Rouge-1, Rouge-2<sup class="xref">5</sup>. Fluency Metric like Rouge LCS<sup class="xref">5</sup>. Entity overlap metric Entity F1, and hallucination metrics like EHI, FactCC, and QAGS<sup class="xref">2</sup><sup>,</sup><sup class="xref">6</sup><sup>,</sup><sup class="xref">18</sup><sup>,</sup><sup class="xref">30</sup>. FactCC uses a classifier trained on synthetic contradiction data to label sentences as entailed or contradicted by the source. The factCC gives two scores; the scores were captured where the label is VALID. On the other hand, QAGS uses a question-and-answer method that runs on an LLM. Light model T5 small was used for generating questions on the text<sup class="xref">31</sup>. Roberta_base_Squad2 was used for generating answers over the output text<sup class="xref">32</sup>. These models were chosen for their convenient computation cost for execution.</p>                        </div>
+                    </div>
+                                        
+                                        <div class="sc_text_acc">
+                        <div class="anchor_tag" id="rep-res"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Representative Results</h2>
+                        </div>
+
+                    <div class="sc_text_acc_container content-display-0">
+                      <p class="jove_content">The experiments here focus on quantitative evidence for the impact that EHI-guided fine-tuning makes in reducing entity-level hallucinations across multiple model architectures and datasets. The results demonstrate consistent improvements in hallucination metrics while maintaining factual consistency and preserving question-answering capabilities.</p>
+<p class="jove_content"><strong>Dataset performances</strong><br />
+<strong>Dialogue dataset performance:</strong><br />
+<strong>Table 5</strong> presents the results for hallucination reduction on the multi-turn dialogue dataset. EHI-guided fine-tuning achieved substantial improvements for both Mistral and DistilBART models:</p>
+<p class="jove_content">Mistral achieved a 57.8% relative improvement in EHI scores, rising from 0.346 to 0.546, while DistilBART demonstrated a 61.5% relative improvement, increasing from 0.317 to 0.512. Both models showed consistent factual consistency gains, with FactCC improvements of 36.6% and 64.4% respectively. Regarding question-answering performance, QAGS results showed mixed patterns: Mistral experienced a modest 5.7% decrease, DistilBART maintained stable performance with a slight 3.3% improvement, and Flan-T5 achieved a notable 20.8% improvement in QAGS scores. This suggests that the hallucination reduction approach preserves or enhances question-answering capabilities for most models.</p>
+<p class="jove_content">As observed from <strong>Table 6</strong>, Fine-tuning with EHI benefits Mistral most: R1, R2, and R-L rise modestly, signaling better unigram coverage, phrase cohesion, and structural alignment. DistilBART is essentially unchanged, with marginal &#177;0.002 fluctuations, indicating the base model already fits the task. Flan-T5 degrades, suggesting less overlap. Overall, EHI fine-tuning helps smaller transformer variants but performs less than moderately for instruction-tuned Flan-T5 on this dialogue corpus in terms of informativeness and fluency. Moreover, the fine tuning for Flan T5 needs to be revised to allow larger learning rate to get better results.</p>
+<p class="jove_content"><strong>XSUM dataset performance:</strong><br />
+<strong>Table 7</strong> contains results for the XSUM dataset that provide evidence of EHI-based fine-tuning&#039;s effectiveness across news summarization tasks. The combined model results show notable improvements:</p>
+<p class="jove_content">EHI scores improved for Mistral and DistilBART, representing substantial hallucination reduction. FactCC scores were maintained, demonstrating that hallucination reduction does not compromise factual consistency. Crucially, QAGS decreased by only 2.4%, showing that despite the dramatic reduction in entity hallucinations, question-answering quality was largely preserved. This minimal degradation in QAGS performance is potentially due to the use of less powerful QA generation models, attributed to computation cost. DistilBART shows similar patterns except that QAGS performed better, which can also be related to RL of DistilBART showing greater fluency.</p>
+<p class="jove_content">As observed in <strong>Table 8</strong>, Mistral gains strongly after fine-tuning, with ROUGE-1 up +0.10, ROUGE-2 up +0.06, and ROUGE-L up +0.003, signaling broader lexical and phrasal overlap. DistilBART also improves, especially in bigrams (ROUGE-2 +0.07), while ROUGE-1 ticks up slightly by +0.007 and ROUGE-L slips by -0.001. In contrast, Flan-T5 deteriorates across all scores (ROUGE-1 &#8722;0.057, ROUGE-2 &#8722;0.014, ROUGE-L &#8722;0.086). Overall, fine-tuning sharpens Mistral and DistilBART but Flan-T5 fluency is impacted which could be attributed to chunking method used for input to FlanT5 to handle longer texts.</p>
+<p class="jove_content"><strong>Distribution analysis:</strong><br />
+The cumulative distribution function (CDF) analysis demonstrates that hallucination reduction is not limited to outlier cases but represents systematic improvement across most of the test samples (<strong>Figure 5</strong>, <strong>Figure 6</strong>, <strong>Figure 7</strong>, <strong>Figure 8</strong>, <strong>Figure 9</strong>, <strong>Figure 10</strong>, <strong>Figure 11</strong>, and <strong>Figure 12</strong>). EHI curves shift substantially rightward for Mistral and DistilBART in both datasets, indicating that most samples achieved higher entity faithfulness. FactCC distributions show consistent rightward shifts across all three models, confirming widespread factuality improvements. Importantly, QAGS distributions show minimal changes for most models, confirming that the question-answering quality is preserved across the distribution rather than just in aggregate statistics.</p>
+<p class="jove_content"><strong>Component-level analysis: Direct evidence of hallucination reduction:</strong><br />
+As depicted in <strong>Table 9</strong> the ablation analysis on XSUM Mistral data provides granular evidence of how EHI fine-tuning specifically targets different types of hallucination:</p>
+<p class="jove_content">Total harmful hallucination was reduced by 7.9% (from 0.757 to 0.697 combined NH+OF+LF). Negative hallucination specifically decreased by 5.8%, directly proving reduced fabrication, while extractiveness more than doubled, showing improved grounding in source material. The model simultaneously reduced three types of harmful behavior while increasing beneficial extraction.</p>
+<p class="jove_content"><strong>Correlation between EHI improvements and factuality metrics:</strong><br />
+Correlations were computed on the delta improvements (EHI_after &#8722; EHI_before) rather than raw post-finetuning scores, to capture the relative change induced by fine-tuning. <strong>Table 10</strong> presents correlation coefficients between EHI improvements and other factuality metrics, providing statistical evidence of the relationship between entity hallucination reduction and overall factual consistency:</p>
+<p class="jove_content">The correlation analysis reveals important insights into the relationship between EHI improvements and question-answering performance. For Mistral and DistilBART, EHI improvements show weak correlation with QAGS changes (&#961;&#8776;0), suggesting that entity hallucination reduction operates independently of question-answering capabilities. However, Flan-T5 demonstrates a strong positive correlation between EHI and QAGS improvements (&#961;=0.1), indicating that for some architectures, reducing entity hallucinations can enhance question-answering performance. This architectural difference suggests that the relationship between entity faithfulness and question-answering quality may depend on model design and training approaches.</p>
+<p class="jove_content"><strong>Cross-domain and cross-model validation</strong><br />
+EHI-based fine-tuning consistently reduces hallucination while safeguarding or even enhancing factual consistency across all three model families. For DistilBART, entity-level errors fall substantially, FactCC scores rise appreciably, and QAGS remains marginally higher, showing that eliminating spurious entities does not impair answerability. The decoder-only Mistral follows the same general trend: hallucinations drop, and factuality improves, offset only by a slight decline in QAGS that hints at a minor trade-off between conversational recall and cleaner content. In contrast, Flan-T5 exhibits a different adaptation pattern -- despite a modest setback on the entity metric, it delivers pronounced gains in both FactCC and QAGS, implying that the model reallocates capacity toward broader factual correctness rather than entity-level precision.</p>
+<p class="jove_content">These tendencies persist when the systems are moved from the dialogue corpus to the XSUM news domain. Hallucinations decrease in both settings, while QAGS stays nearly unchanged, demonstrating that the EHI strategy generalizes across structurally different texts without eroding the models&#039; ability to answer questions about their own summaries. Taken together, the findings confirm that EHI fine-tuning is an architecture-agnostic and domain-robust method: it curbs hallucinations, lifts sentence-level factuality, and -- apart from minor trade-offs in certain scenarios -- retains effective question-answering performance.</p>
+<p class="jove_content"><strong>Qualitative analysis and error cases</strong><br />
+<strong>Observed improvements in entity handling:</strong><br />
+Consider the following examples from our meeting transcript dataset. In one instance, the input transcript described a sales meeting where Alice and Bob from ACME Corporation discussed Q3 revenue. The baseline summary incorrectly mentioned &#034;John and Sarah from BetaTech discussed product improvements,&#034; fabricating both names and company, which would lead to incorrect answers about meeting participants. After EHI-guided fine-tuning, the summary correctly stated that Alice and Bob from ACME Corporation discussed Q3 sales, preserving both entity accuracy and the ability to answer questions about the meeting content. Manual inspection across random samples revealed consistent patterns of hallucination reduction while maintaining answer-relevant information. Before fine-tuning, generated summaries frequently introduced entities unrelated to the input or omitted key entities entirely, often resulting in summaries that could not accurately answer questions about the original content. After fine-tuning, summaries exhibited better alignment with input documents, correctly preserving mentioned organizations, speaker names, and events while retaining the information necessary for question-answering tasks.</p>
+<p class="jove_content"><strong>Remaining limitations and error cases:</strong><br />
+While overall hallucination was reduced and QAGS performance largely preserved, occasional errors persisted. In certain cases, models overly prioritized exact entity copying at the expense of paraphrasing or abstraction quality, which could affect the natural language flow important for question-answering systems. The method focuses primarily on entities, and relation context is not evaluated, meaning hallucination remains possible with incorrect relations, which could impact questions about relationships between entities. Pronouns and acronyms sometimes went undetected by the NER model, causing summaries to omit entities that might be relevant for answering specific questions.&#160;Informativeness trade-off. Results on the in-domain dialogue dataset (<strong>Table 6</strong>) show only modest gains in ROUGE-1/2/L for most models after EHI fine-tuning. This highlights a limitation of optimizing entity faithfulness alone: improving which entities are mentioned does not necessarily increase coverage or informativeness of the summary. In practice, this suggests pairing EHI with content-coverage rewards (e.g., ROUGE or entity-recall targets) for a better faithfulness-informativeness balance.</p>
+<p class="jove_content"><strong>Limitations and future research directions</strong><br />
+<strong>Current limitations, including question-answering considerations:</strong><br />
+Several limitations warrant acknowledgment, particularly regarding question-answering performance. The approach depends on NER accuracy, with the 92.6% F1 score of BERT-NER meaning some entity hallucinations may go undetected, potentially affecting questions about missed entities. While QAGS performance is largely preserved, formal statistical significance testing is needed for comprehensive validation across larger datasets to ensure the robustness of both entity improvements and question-answering preservation. There is a small recall reduction (16.7% on XSUM) as models become more conservative in entity generation, which may impact comprehensive question-answering in some cases. Additional evaluation is needed across specialized domains such as medical and legal texts, where both factual accuracy and question-answering capabilities are critical.</p>
+<p class="jove_content"><strong>Future enhancement opportunities:</strong><br />
+Future enhancements should focus on incorporating coreference resolution for better pronoun and acronym handling, which would benefit both entity accuracy and question-answering completeness. Research should explore combining EHI with informativeness rewards to optimize the faithfulness-recall balance while maintaining question-answering performance. Extending evaluation to medical and legal domains where both entity accuracy and question-answering costs are highest would provide valuable insights. Additionally, investigating the relationship between entity-level corrections and question-answering performance through more detailed analysis could inform better optimization strategies that enhance both dimensions simultaneously. The approach can also be investigated against low-resource languages where a stable NER model exists, which could be considered for future adaptation.</p>
+<p class="jove_content"><strong>To facilitate replication, a </strong><strong>Table of Materials</strong> is provided as an accompanying spreadsheet. It lists the major software and hardware components used in these experiments, including the bertNER model and Hugging Face Transformers libraries, GPUs, and cloud computing resources. Researchers can refer to the <strong>Table of Materials</strong> to obtain the exact tools and recreate our training pipeline.</p>
+<p class="jove_content"><strong>DATA AVAILABILITY:</strong><br />
+The data used and generated in this work is present and publicly accessible in Zenodo repository with ID: 10.5281/zenodo.17991045.</p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 1" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig1.jpg" /><br />
+<strong>Figure 1</strong><strong>: Classification of entities for Hallucination factors.</strong> <a href="https://www.jove.com/files/ftp_upload/68962/68962fig1large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 2" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig2.jpg" /><br />
+<strong>Figure 2</strong><strong>: High-level overview of the experimental design.</strong> Two datasets feed into three models (Flan-T5, Mistral and DistilBART) with and without fine-tuning. Summaries are evaluated using EHI, Entity F1, ROUGE and other metrics. <a href="https://www.jove.com/files/ftp_upload/68962/68962fig2large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 3" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig3.jpg" /><br />
+<strong>Figure 3</strong><strong>:&#160;Process flow. </strong>Transcripts and articles are preprocessed, baseline summaries are generated, EHI is computed, models are fine-tuned using the EHI reward and the fine-tuned summaries are evaluated. <a href="https://www.jove.com/files/ftp_upload/68962/68962fig3large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 4" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig4.jpg" /><br />
+<strong>Figure 4</strong><strong>: Illustrative computation of EHI and five factors.</strong> <a href="https://www.jove.com/files/ftp_upload/68962/68962fig4large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 5" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig5.jpg" /><br />
+<strong>Figure 5</strong><strong>: Empirical CDF of EHI scores in the Dialogue dataset before and after EHI fine-tuning for each model.</strong> <a href="https://www.jove.com/files/ftp_upload/68962/68962fig5large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 6" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig6.jpg" /><br />
+<strong>Figure 6</strong><strong>: Empirical CDF of Entity F1 scores in the Dialogue dataset before and after EHI fine-tuning for each model.</strong> <a href="https://www.jove.com/files/ftp_upload/68962/68962fig6large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 7" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig7.jpg" /><br />
+<strong>Figure 7</strong><strong>: Empirical CDF of FactCC scores in the Dialogue dataset before and after EHI fine-tuning for each model.</strong> <a href="https://www.jove.com/files/ftp_upload/68962/68962fig7large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 8" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig8.jpg" /><br />
+<strong>Figure 8</strong><strong>: Empirical CDF of QAGS scores in the Dialogue dataset before and after EHI fine-tuning for each model.</strong> <a href="https://www.jove.com/files/ftp_upload/68962/68962fig8large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 9" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig9.jpg" /><br />
+<strong>Figure 9</strong><strong>: Empirical CDF of EHI scores in the XSUM dataset before and after EHI fine-tuning for each model.</strong> <a href="https://www.jove.com/files/ftp_upload/68962/68962fig9large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 10" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig10.jpg" /><br />
+<strong>Figure 10</strong><strong>: Empirical CDF of EF1 scores in the XSUM dataset before and after EHI fine-tuning for each model.</strong> <a href="https://www.jove.com/files/ftp_upload/68962/68962fig10large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 11" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig11.jpg" /><br />
+<strong>Figure 11</strong><strong>: Empirical CDF of FactCC scores in the XSUM dataset before and after EHI fine-tuning for each model. </strong><a href="https://www.jove.com/files/ftp_upload/68962/68962fig11large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<p class="jove_content biglegend"><img class="lazy" alt="Figure 12" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="/files/ftp_upload/68962/68962fig12.jpg" /><br />
+<strong>Figure 12</strong><strong>: Empirical CDF of QAGS scores in the XSUM dataset before and after EHI fine-tuning for each model.</strong> <a href="https://www.jove.com/files/ftp_upload/68962/68962fig12large.jpg" target="_blank">Please click here to view a larger version of this figure.</a></p>
+<table border="1">
+	
+		<tr>
+			<td>Model</td>
+			<td>Precision</td>
+			<td>Recall</td>
+			<td>F1</td>
+			<td>Overlap</td>
+		</tr>
+		<tr>
+			<td>dslim/bert-base-NER</td>
+			<td>0.5514</td>
+			<td>0.6104</td>
+			<td>0.5794</td>
+			<td>0.5809</td>
+		</tr>
+		<tr>
+			<td>Davlan/xlm-roberta-base-ner-hrl</td>
+			<td>0.2415</td>
+			<td>0.3106</td>
+			<td>0.2717</td>
+			<td>0.276</td>
+		</tr>
+		<tr>
+			<td>spaCy NER</td>
+			<td>0.21</td>
+			<td>0.26</td>
+			<td>0.2323</td>
+			<td>0.235</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 1: NER Models performance for a sample of 200 articles. </strong></p>
+<table border="1">
+	
+		<tr>
+			<td>Hyperparameter</td>
+			<td>Value</td>
+		</tr>
+		<tr>
+			<td>Model</td>
+			<td>Mistral-7B-v0.1</td>
+		</tr>
+		<tr>
+			<td>Optimizer</td>
+			<td>Adam</td>
+		</tr>
+		<tr>
+			<td>Learning Rate</td>
+			<td>2 &#215; 10&#8315;&#8309;</td>
+		</tr>
+		<tr>
+			<td>Batch Size</td>
+			<td>Dynamic (based on 40GB RAM A100 GPU, ~64 tokens per batch with gradient accumulation)</td>
+		</tr>
+		<tr>
+			<td>Chunking Strategy</td>
+			<td>Sliding window with 1024 tokens, 256 overlap</td>
+		</tr>
+		<tr>
+			<td>Sampling Strategy</td>
+			<td>Greedy Decoding</td>
+		</tr>
+		<tr>
+			<td>Reward Normalization</td>
+			<td>Applied per batch&#160;</td>
+		</tr>
+		<tr>
+			<td>Summary Regeneration</td>
+			<td>Every 500 updates</td>
+		</tr>
+		<tr>
+			<td>NER Tool</td>
+			<td>BertNER</td>
+		</tr>
+		<tr>
+			<td>Regularization</td>
+			<td>Dropout = 0.1, Gradient Clipping = 1.0</td>
+		</tr>
+		<tr>
+			<td>Fine-Tuning Approach</td>
+			<td>Reward-guided reinforcement learning (EHI-based)</td>
+		</tr>
+		<tr>
+			<td>Number of Epochs Trained</td>
+			<td>20&#160;</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 2: Hyperparameter configuration Mistral-7B.</strong></p>
+<table border="1">
+	
+		<tr>
+			<td>Hyperparameter</td>
+			<td>Value</td>
+		</tr>
+		<tr>
+			<td>Model</td>
+			<td>DistilBART-CNN-12-6</td>
+		</tr>
+		<tr>
+			<td>Optimizer</td>
+			<td>AdamW</td>
+		</tr>
+		<tr>
+			<td>Learning Rate</td>
+			<td>3 &#215; 10-5</td>
+		</tr>
+		<tr>
+			<td>Batch Size</td>
+			<td>Dynamic (based on 16GB T4/L4GPU, gradient accumulation to simulate larger batch)</td>
+		</tr>
+		<tr>
+			<td>Chunking Strategy</td>
+			<td>Sliding window with 512 tokens, 128 overlap</td>
+		</tr>
+		<tr>
+			<td>Sampling Strategy</td>
+			<td>Greedy Decoding</td>
+		</tr>
+		<tr>
+			<td>Reward Normalization</td>
+			<td>Applied per batch</td>
+		</tr>
+		<tr>
+			<td>Summary Regeneration</td>
+			<td>Every 500 updates</td>
+		</tr>
+		<tr>
+			<td>NER Tool</td>
+			<td>BertNER</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 3: Hyperparameter configuration DistilBART.</strong></p>
+<table border="1">
+	
+		<tr>
+			<td>Hyperparameter</td>
+			<td>Value</td>
+		</tr>
+		<tr>
+			<td>Model</td>
+			<td>Flan-T5-Large</td>
+		</tr>
+		<tr>
+			<td>Optimizer</td>
+			<td>AdamW</td>
+		</tr>
+		<tr>
+			<td>Learning Rate</td>
+			<td>5 &#215; 10-6</td>
+		</tr>
+		<tr>
+			<td>Batch Size</td>
+			<td>Dynamic (based on 40GB GPU, gradient accumulation for stability)</td>
+		</tr>
+		<tr>
+			<td>Chunking Strategy</td>
+			<td>Sliding window with 512 tokens, 128 overlap</td>
+		</tr>
+		<tr>
+			<td>Sampling Strategy</td>
+			<td>Greedy Decoding</td>
+		</tr>
+		<tr>
+			<td>Reward Normalization</td>
+			<td>Applied per batch</td>
+		</tr>
+		<tr>
+			<td>Summary Regeneration</td>
+			<td>Every 500 updates</td>
+		</tr>
+		<tr>
+			<td>NER Tool</td>
+			<td>Bert NER</td>
+		</tr>
+		<tr>
+			<td>Regularization</td>
+			<td>Dropout = 0.1, Weight Decay = 0.01</td>
+		</tr>
+		<tr>
+			<td>Fine-Tuning Approach</td>
+			<td>Reward-guided reinforcement learning (EHI-based)</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 4: Hyperparameter configuration Flan-T5 Large.</strong></p>
+<table border="1">
+	
+		<tr>
+			<td><strong>Model</strong></td>
+			<td><strong>EHI_before</strong></td>
+			<td><strong>EHI_after</strong></td>
+			<td><strong>&#916;EHI</strong></td>
+			<td><strong>FactCC_before</strong></td>
+			<td><strong>FactCC_after</strong></td>
+			<td><strong>&#916;FactCC</strong></td>
+			<td><strong>QAGS_befor</strong></td>
+			<td><strong>QAGS_after</strong></td>
+			<td><strong>&#916;QAGS</strong></td>
+		</tr>
+		<tr>
+			<td><strong>Mistral</strong></td>
+			<td>0.346</td>
+			<td>0.546</td>
+			<td>0.2</td>
+			<td>0.287</td>
+			<td>0.392</td>
+			<td>0.105</td>
+			<td>0.194</td>
+			<td>0.183</td>
+			<td>-0.011</td>
+		</tr>
+		<tr>
+			<td><strong>DistilBART</strong></td>
+			<td>0.317</td>
+			<td>0.512</td>
+			<td>0.195</td>
+			<td>0.188</td>
+			<td>0.309</td>
+			<td>0.121</td>
+			<td>0.121</td>
+			<td>0.125</td>
+			<td>0.004</td>
+		</tr>
+		<tr>
+			<td><strong>Flan-T5</strong></td>
+			<td>0.173</td>
+			<td>0.145</td>
+			<td>-0.028</td>
+			<td>0.128</td>
+			<td>0.254</td>
+			<td>0.125</td>
+			<td>0.077</td>
+			<td>0.094</td>
+			<td>0.016</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 5: Dialogue dataset: Mean scores before and after EHI fine-tuning.</strong></p>
+<table border="1">
+	
+		<tr>
+			<td><strong>Model</strong></td>
+			<td><strong>Rouge-1 Before</strong></td>
+			<td><strong>Rouge-1 After</strong></td>
+			<td><strong>Rouge-2 Before</strong></td>
+			<td><strong>Rouge-2 After</strong></td>
+			<td><strong>RougeL Before</strong></td>
+			<td><strong>RougeL After</strong></td>
+		</tr>
+		<tr>
+			<td>FlanT5</td>
+			<td>0.3638</td>
+			<td>0.2665</td>
+			<td>0.1272</td>
+			<td>0.0854</td>
+			<td>0.1235</td>
+			<td>0.0837</td>
+		</tr>
+		<tr>
+			<td>Mistral</td>
+			<td>0.1759</td>
+			<td>0.1819</td>
+			<td>0.0469</td>
+			<td>0.0519</td>
+			<td>0.0932</td>
+			<td>0.0973</td>
+		</tr>
+		<tr>
+			<td>DistilBART</td>
+			<td>0.2929</td>
+			<td>0.2903</td>
+			<td>0.0911</td>
+			<td>0.0886</td>
+			<td>0.1156</td>
+			<td>0.1128</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 6: Dialogue dataset: Mean scores before and after EHI fine-tuning for Informativeness (R1, R2) and Fluency (RL).</strong></p>
+<table border="1">
+	
+		<tr>
+			<td><strong>Model</strong></td>
+			<td><strong>EHI_before</strong></td>
+			<td><strong>EHI_after</strong></td>
+			<td><strong>&#916;EHI</strong></td>
+			<td><strong>FactCC_before</strong></td>
+			<td><strong>FactCC_after</strong></td>
+			<td><strong>&#916;FactCC</strong></td>
+			<td><strong>QAGS_befor</strong></td>
+			<td><strong>QAGS_after</strong></td>
+			<td><strong>&#916;QAGS</strong></td>
+		</tr>
+		<tr>
+			<td><strong>Mistral</strong></td>
+			<td>0.144</td>
+			<td>0.341</td>
+			<td>0.197</td>
+			<td>0.287</td>
+			<td>0.392</td>
+			<td>0.105</td>
+			<td>0.194</td>
+			<td>0.183</td>
+			<td>-0.011</td>
+		</tr>
+		<tr>
+			<td><strong>DistilBART</strong></td>
+			<td>0.378</td>
+			<td>0.419</td>
+			<td>0.041</td>
+			<td>0.286</td>
+			<td>0.397</td>
+			<td>0.111</td>
+			<td>0.227</td>
+			<td>0.228</td>
+			<td>0.001</td>
+		</tr>
+		<tr>
+			<td><strong>Flan-T5</strong></td>
+			<td>0.307&#8239;</td>
+			<td>0.289</td>
+			<td>-0.018</td>
+			<td>0.171</td>
+			<td>0.397</td>
+			<td>0.226</td>
+			<td>0.239</td>
+			<td>0.105</td>
+			<td>0.134</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 7: XSUM dataset- hallucination and faithfulness. </strong>Mean scores before and after EHI fine-tuning for hallucination and faithfulness.</p>
+<table border="1">
+	
+		<tr>
+			<td><strong>Model</strong></td>
+			<td><strong>Rouge-1 Before</strong></td>
+			<td><strong>Rouge-1 After</strong></td>
+			<td><strong>Rouge-2 Before</strong></td>
+			<td><strong>Rouge-2 After</strong></td>
+			<td><strong>RougeL Before</strong></td>
+			<td><strong>RougeL After</strong></td>
+		</tr>
+		<tr>
+			<td>FlanT5</td>
+			<td>0.396</td>
+			<td>0.3389</td>
+			<td>0.2058</td>
+			<td>0.1913</td>
+			<td>0.3556</td>
+			<td>0.2693</td>
+		</tr>
+		<tr>
+			<td>Mistral</td>
+			<td>0.2246</td>
+			<td>0.3253</td>
+			<td>0.1556</td>
+			<td>0.217</td>
+			<td>0.0845</td>
+			<td>0.0875</td>
+		</tr>
+		<tr>
+			<td>DistilBART</td>
+			<td>0.1711</td>
+			<td>0.1786</td>
+			<td>0.1242</td>
+			<td>0.1914</td>
+			<td>0.119</td>
+			<td>0.1179</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 8: XSUM dataset- informativeness and fluency. </strong>Mean scores before and after EHI fine-tuning for informativeness (R1, R2) and fluency (RL).</p>
+<table border="1">
+	
+		<tr>
+			<td><strong>Hallucination Component</strong></td>
+			<td><strong>Before</strong></td>
+			<td><strong>After</strong></td>
+			<td><strong>Change</strong></td>
+			<td><strong>% Reduction</strong></td>
+			<td><strong>Impact</strong></td>
+		</tr>
+		<tr>
+			<td><strong>Negative Hallucination (NH)</strong></td>
+			<td>0.521</td>
+			<td>0.491</td>
+			<td>-0.03</td>
+			<td>-5.80%</td>
+			<td>Reduced fabricated entities</td>
+		</tr>
+		<tr>
+			<td><strong>Over-focus (OF)</strong></td>
+			<td>0.087</td>
+			<td>0.077</td>
+			<td>-0.01</td>
+			<td>-11.50%</td>
+			<td>Less entity repetition</td>
+		</tr>
+		<tr>
+			<td><strong>Lost Focus (LF)</strong></td>
+			<td>0.149</td>
+			<td>0.129</td>
+			<td>-0.02</td>
+			<td>-13.40%</td>
+			<td>Fewer entity omissions</td>
+		</tr>
+		<tr>
+			<td>Extractiveness Factor (EF)</td>
+			<td>0.019</td>
+			<td>0.039</td>
+			<td>0.02</td>
+			<td>105.30%</td>
+			<td>More accurate extraction</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 9: Ablation study showing reduction in harmful hallucination components.</strong></p>
+<table border="1">
+	
+		<tr>
+			<td><strong>Model</strong></td>
+			<td><strong>Corr (EHI, FactCC)</strong></td>
+			<td><strong>Corr (EHI, QAGS)</strong></td>
+			<td><strong>Corr (EHI, Entity F1)</strong></td>
+			<td><strong>Interpretation</strong></td>
+		</tr>
+		<tr>
+			<td><strong>Mistral</strong></td>
+			<td>-0.09</td>
+			<td>-0.02</td>
+			<td>0.56</td>
+			<td>Strong entity correlation, weak QA correlation</td>
+		</tr>
+		<tr>
+			<td><strong>DistilBART</strong></td>
+			<td>-0.02</td>
+			<td>0.01</td>
+			<td>0.31</td>
+			<td>Moderate entity correlation, minimal QA impact</td>
+		</tr>
+		<tr>
+			<td><strong>Flan-T5</strong></td>
+			<td>0.65</td>
+			<td>0.1</td>
+			<td>0.78</td>
+			<td>Strong correlation across all metrics including QAGS</td>
+		</tr>
+	
+</table>
+<p class="jove_content"><strong>Table 10: Correlation between EHI improvement and other metrics (Dialogue dataset).</strong></p>                    </div>
+                    </div>
+                                        
+                    
+                    <div class="sc_text_acc">
+                        <div class="anchor_tag" id="discussion"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Discussion</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container  content-display-0">
+                            <p class="jove_content">QA-based metrics (e.g., FEQA/QuestEval/QAFactEval) and NLI-based metrics (e.g., FactCC/SummaC) require auxiliary QA/entailment components and often provide sentence-level judgments. In contrast, EHI is a lightweight, reference-free, entity-level score that (i) directly targets the primary failure mode we observe -- entity hallucination; (ii) is model-agnostic and fast to compute; and (iii) serves as a dense reward for RL fine-tuning. Empirically, EHI complements QA/NLI metrics by pinpointing which entities drive factuality errors, enabling targeted improvements without adding heavy QA or entailment pipelines.</p>
+<p class="jove_content">The reinforcement-learning framework directly optimizes for entity faithfulness by using the Entity Hallucination Index (EHI) as a dense reward signal<sup class="xref">18</sup>. The metric quantifies the presence, correctness, and grounding of named entities in generated summaries and categorizes hallucinations by type and severity. During fine-tuning, baseline summaries are scored using EHI, and the model is reinforced to maximize this metric, tuning generation toward entity-faithful outputs without relying on human annotations. In contrast to sentence-level QA or entailment scores, EHI is lightweight, reference-free, and model-agnostic, enabling fine-grained feedback at the entity level.</p>
+<p class="jove_content"></p>
+<p class="jove_content">Aligning the model with an entity-level reward addresses the primary failure mode of abstractive summarization -- hallucinated entities -- and complements existing QA/NLI metrics that provide only coarse or sentence-level judgments. Experiments on meeting transcripts and news articles demonstrate consistent improvements across datasets, with a reduction in hallucinated entities and no to minimal degradation in fluency or informativeness. Because the reward does not require manual feedback, this framework provides a scalable way to increase the factual reliability of summarization systems. Entity-aware fine-tuning can thus advance the field by producing more trustworthy outputs that better support downstream QA or information-retrieval tasks.</p>
+<p class="jove_content"></p>
+<p class="jove_content">Few limitations must be acknowledged. The EHI metric depends on named-entity recognition; errors in entity extraction or coreference can propagate into reward calculation and may penalize models unfairly. The reward focuses exclusively on entity hallucinations and does not directly target other factual errors, such as relation or discourse inconsistencies. Reinforcement learning with narrowly defined rewards can sometimes encourage degenerate solutions; for example, fine-tuning for textual entailment alone has been reported to produce overly extractive or less informative summaries<sup class="xref">33</sup>. Although the empirical results show minimal degradations, practitioners must carefully balance faithfulness and informativeness and consider combining EHI with rewards for salience or fluency.</p>
+<p class="jove_content"></p>
+<p class="jove_content">Complementary approaches to hallucination mitigation could be explored alongside or instead of EHI-guided reinforcement learning. Active-learning frameworks such as Hallucination Diversity-Aware Sampling (HADAS) select diverse hallucination instances for annotation and fine-tuning, reducing the human cost of training and addressing multiple hallucination types<sup class="xref">34</sup>. Reinforcement learning with natural language inference rewards improves factual consistency but must be tuned to avoid producing extractive summaries<sup class="xref">33</sup>. Other lines of research include retrieval-augmented generation to ground responses on external documents, improved decoding strategies, and self-verification techniques. Exploring these alternatives may provide broader perspectives on hallucination mitigation and complement EHI-guided reinforcement learning.</p>
+<p class="jove_content"></p>
+<p class="jove_content">Improving factuality is particularly important in high-stakes domains. Hallucinated entities can mislead decision-makers in legal, medical, or scientific settings, where inaccurate summaries may propagate false information. Truthfulness-oriented research emphasizes that models must recognize uncertainty and abstain when knowledge is insufficient, especially in law or medicine<sup class="xref">35</sup>. Because EHI highlights specific entity-level errors and allows targeted corrections, fine-tuned models could be deployed in meeting transcription services, news summarization, or domain-specific summarizers to provide more faithful and trustworthy content. Moreover, the metric&#39;s model-agnostic nature makes it suitable for evaluating and improving both encoder-decoder and decoder-only architectures, encouraging widespread adoption across research and industry.</p>
+<p class="jove_content"></p>
+<p class="jove_content">Future work could extend this approach in several directions. Combining EHI with rewards for informativeness or relation-level factuality may balance faithfulness and content richness. Incorporating improved named-entity and coreference resolution systems will reduce reward noise. Integrating EHI with active-learning strategies, natural language inference rewards such as ternary reward schemes<sup class="xref">35</sup>&#160;-- may address broader types of hallucination and encourage abstention when appropriate. Applying EHI-guided fine-tuning to other generative tasks such as question-answering, dialogue, and cross-lingual summarization, and evaluating its effectiveness in specialized domains, such as biomedical or legal texts, will further clarify its impact and limitations.</p>
+<p class="jove_content"></p>
+<p class="jove_content">This study introduces a reinforcement-learning-based-based fine-tuning framework for abstractive summarization that leverages the Entity Hallucination Index (EHI) as a dense, reference-free reward signal. By comparing named entities in generated summaries against source documents and penalizing ungrounded or extraneous entities, our approach directly optimizes for entity faithfulness. Extensive experiments on multi-turn meeting transcripts and the XSUM news dataset demonstrate that EHI-based fine-tuning substantially reduces entity hallucinations, improving EHI scores by up to 61.5% on dialogue data and 136.8% on news articles-while maintaining factual consistency. Ablation studies confirm targeted reductions in negative hallucination, over-focus, and lost-focus components, alongside an increment of extractiveness. Cross-model validation across encoder-decoder and decoder-only architecture shows consistent performance gains, and correlation analyses reveal that EHI improvements align with enhanced entity recall and, for some models, improved question-answering capabilities. Qualitative examples further illustrate the elimination of fabricated entities without compromising the ability to answer content-based questions. Although the method incurs a modest recall trade-off and depends on NER accuracy, it represents a practical and scalable solution for enhancing factual reliability in neural summarization. Future work will explore integrating coreference resolution, combining EHI with informativeness rewards, and extending evaluation to specialized domains such as biomedical and legal texts.</p>                        </div>
+                    </div>
+                                        
+                                        <div class="sc_text_acc">
+                        <div class="anchor_tag" id="disclosures"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Disclosures</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container">
+                            <p class="jove_content">The authors have nothing to disclose.</p>                        </div>
+                    </div>
+                                        
+                                        <div class="sc_text_acc">
+                        <div class="anchor_tag" id="ackn"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Acknowledgements</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container">
+                            <p class="jove_content">None.</p>                        </div>
+                    </div>
+                                        
+                                        <div class="sc_text_acc">
+                        <div class="anchor_tag" id="materials"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Materials</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container">
+                            <table><tbody><tr><td>Colab NVIDIA A100 GPU</td><td>NVIDIA</td><td>N/A</td><td>Google Colaboratory Pro</td></tr><tr><td>DistilBART (Encoder&ndash;Decoder)</td><td>Hugging Face</td><td>https://huggingface.co/sshleifer/distilbart-cnn-12-6</td><td></td></tr><tr><td>dslim/bert-base-NER</td><td>Hugging Face (dslim)</td><td>https://huggingface.co/dslim/bert-base-NER</td><td>Fine-tuned BERT base for English NER</td></tr><tr><td>Evaluation Models&nbsp; QAGS (QA-based)</td><td>Salesforce Research</td><td>N/A</td><td>Factuality classifier</td></tr><tr><td>Evaluation Models (Factuality) FactCC</td><td>Google Research</td><td>N/A</td><td>Factuality classifier</td></tr><tr><td>Flan-T5 (Encoder&ndash;Decoder)</td><td>Google</td><td>https://huggingface.co/docs/transformers/main/en/model_doc/flan-t5</td><td>open-source, text-to-text, large language model</td></tr><tr><td>Hugging Face Transformers</td><td>Hugging Face, Inc.</td><td>https://huggingface.co/docs/transformers/index</td><td>Model loading &amp; fine-tuning</td></tr><tr><td>Nous-Hermes-2-Mistral-7B-DPO</td><td>Mistral</td><td>https://huggingface.co/NousResearch/Nous-Hermes-2-Mistral-7B-DPO</td><td>7 billion parameter Language model</td></tr><tr><td>Programming Language Python 3.10 (Colab runtime)</td><td>Python Software Foundation</td><td>Version 3.10</td><td>Core implementation</td></tr><tr><td>Streamlit</td><td>Open Source&nbsp;</td><td>https://streamlit.io/</td><td>Factuality classifier</td></tr><tr><td>XLSUM dataset</td><td>BUET</td><td>https://github.com/csebuetnlp/xl-sum</td><td></td></tr><tr><td>XSUM dataset</td><td>University of Edinburgh</td><td>https://github.com/EdinburghNLP/XSum</td><td></td></tr></tbody></table>                        </div>
+                    </div>
+                                        
+                                        <div class="sc_text_acc">
+                        <div class="anchor_tag" id="references"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">References</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container">
+                            <ol>
+	<li>Maynez, J., Narayan, S., Bohnet, B., McDonald, R. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=On+faithfulness+and+factuality+in+abstractive+summarization.">On faithfulness and factuality in abstractive summarization.</a> <em style='font-style: italic'>Proc Annu Meet Assoc Comput Linguist</em>. <b>2020</b>, 173-173 (2020).</li><li>Durmus, E., He, H., Diab, M. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=FEQA:+A+question+answering+evaluation+framework+for+faithfulness+assessment+in+abstractive+summarization.">FEQA: A question answering evaluation framework for faithfulness assessment in abstractive summarization.</a> , 454-454 (2020).</li><li>. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=A+short+summary+of+automatic+summarization.">A short summary of automatic summarization.</a> <em style='font-style: italic'>NLG Blog</em>. , (2018).</li><li>Pagnoni, A., Padmakumar, V., May, J. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Understanding+factuality+in+abstractive+summarization.">Understanding factuality in abstractive summarization.</a> <b>2021</b>, 4812-4829 (2021).</li><li>Lin, C. Y. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=ROUGE:+A+package+for+automatic+evaluation+of+summaries.">ROUGE: A package for automatic evaluation of summaries.</a> <em style='font-style: italic'>Workshop Text Summarization Branches Out</em>. <b>2004</b>, 74-81 (2004).</li><li>Kry&#347;ci&#324;ski, W., McCann, B., Xiong, C., Socher, R. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Evaluating+the+factual+consistency+of+abstractive+text+summarization.">Evaluating the factual consistency of abstractive text summarization.</a> <b>2020</b>, 750-750 (2020).</li><li>Goyal, T., Durmus, E., Cardie, C. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Fact+checking+summarization+with+self+supervised+and+few+shot+learning.">Fact checking summarization with self supervised and few shot learning.</a> <em style='font-style: italic'>Proc Annu Meet Assoc Comput Linguist</em>. <b>2022</b>, 564-579 (2022).</li><li>Scialom, T., Dray, P. A., Lamprier, S., Piwowarski, B., Staiano, J., Wang, A., Gallinari, P. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=QuestEval:+Summarization+asks+for+fact-based+evaluation.">QuestEval: Summarization asks for fact-based evaluation.</a> <b>2021</b>, 6594-6604 (2021).</li><li>Mukesh, K. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Hallucinations+in+abstractive+summarization.">Hallucinations in abstractive summarization.</a> <em style='font-style: italic'>Medium</em>. , (2023).</li><li>Cao, M., Dong, Y., Wu, J., Cheung, J. C. K. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Factual+error+correction+for+abstractive+summarization+models.">Factual error correction for abstractive summarization models.</a> <b>2020</b>, 6251-6258 (2020).</li><li>Yan, E. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=.">.</a> <em style='font-style: italic'>Evaluation &amp; hallucination detection for abstractive summaries</em>. , (2021).</li><li>Uekawa, A. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=.">.</a> <em style='font-style: italic'>Evaluation metrics for summarization</em>. , (2023).</li><li>Honnibal, M., Montani, I. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=spaCy+2:+Natural+language+understanding+with+Bloom+embeddings+convolutional+neural+networks+and+incremental+parsing.">spaCy 2: Natural language understanding with Bloom embeddings convolutional neural networks and incremental parsing.</a> <em style='font-style: italic'>Zenodo</em>. , (2017).</li><li>. Reinforcement learning from human feedback: Aligning large language models Available from: <a target="_blank" href="https://neptune.ai/blog/reinforcement-learning-from-human-feedback">https://neptune.ai/blog/reinforcement-learning-from-human-feedback</a> (2023)</li><li>Shakil, H., Farooq, A., Kalita, J. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Abstractive+text+summarization:+State+of+the+art,+challenges,+and+improvements.">Abstractive text summarization: State of the art, challenges, and improvements.</a> <em style='font-style: italic'>Neurocomputing</em>. <b>603</b>, 128255-128255 (2024).</li><li>AI, Z. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Reducing+LLM+hallucinations:+A+developer's+guide.">Reducing LLM hallucinations: A developer's guide.</a> <em style='font-style: italic'>GetZep</em>. , (2025).</li><li>Ouyang, L., et al. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Training+language+models+to+follow+instructions+with+human+feedback.">Training language models to follow instructions with human feedback.</a> <em style='font-style: italic'>Adv Neural Inf Process Syst</em>. <b>2022</b>, 27730-27744 (2022).</li><li>Praveenkumar, K., Balbantaray, R. C., Vittala, K. P. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Entity+hallucination+index+in+abstractive+summarization-A+metric.">Entity hallucination index in abstractive summarization-A metric.</a> <b>2023</b>, 1-5 (2023).</li><li>Pasunuru, R., Bansal, M. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Multi-reward+reinforced+summarization+with+saliency+and+entailment.">Multi-reward reinforced summarization with saliency and entailment.</a> <b>2018</b>, 646-653 (2018).</li><li>Williams, R. J. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Simple+statistical+gradient-following+algorithms+for+connectionist+reinforcement+learning.">Simple statistical gradient-following algorithms for connectionist reinforcement learning.</a> <em style='font-style: italic'>Mach Learn</em>. <b>8</b> (3-4), 229-256 (1992).</li><li>Katwe NLP. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=.">.</a> <em style='font-style: italic'>EHI_XLSUM_XSUM_Finetuning</em>. , (2025).</li><li>Nedoluzhko, A., Singh, M., Hled&#237;kov&#225;, M., Ghosal, T., Bojar, O. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=ELITR+minuting+corpus:+A+novel+dataset+for+automatic+minuting+from+multi-party+meetings+in+English+and+Czech.">ELITR minuting corpus: A novel dataset for automatic minuting from multi-party meetings in English and Czech.</a> <b>2022</b>, 2623-2632 (2022).</li><li>Narayan, S., Cohen, S. B., Lapata, M. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Don't+give+me+the+details,+just+the+summary!+Topic+aware+convolutional+neural+networks+for+extreme+summarization.">Don't give me the details, just the summary! Topic aware convolutional neural networks for extreme summarization.</a> <b>2018</b>, 1797-1807 (2018).</li><li>Lewis, M., et al. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Denoising+sequence+to+sequence+pre+training+for+natural+language+generation,+translation,+and+comprehension.">Denoising sequence to sequence pre training for natural language generation, translation, and comprehension.</a> <em style='font-style: italic'>Proc Annu Meet Assoc Comput Linguist</em>. <b>2020</b>, 7871-7880 (2020).</li><li>Chung, H. W., et al. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Scaling+instruction+fine-tuned+language+models.">Scaling instruction fine-tuned language models.</a> <em style='font-style: italic'>J Mach Learn Res</em>. <b>25</b> (1), 1-53 (2024).</li><li>Jiang, A. Q., et al. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Mistral+7B.">Mistral 7B.</a> <em style='font-style: italic'>arXiv</em>. , (2023).</li><li>Chandra, C., Ojima, Y., Bendarkar, M. V., Mavris, D. N. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Aviation+BERT+NER:+Named+entity+recognition+for+aviation+safety+reports.">Aviation BERT NER: Named entity recognition for aviation safety reports.</a> <em style='font-style: italic'>Aerospace</em>. <b>11</b> (11), 890-890 (2024).</li><li>Lim, D. S. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=.">.</a> <em style='font-style: italic'>bert-base-NER</em>. , (2021).</li><li>Kingma, D. P., Ba, J. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Adam:+A+method+for+stochastic+optimization.">Adam: A method for stochastic optimization.</a> , (2015).</li><li>Wang, A., Cho, K. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=QAGS:+Evaluating+question+answering+and+generation+for+summarization.">QAGS: Evaluating question answering and generation for summarization.</a> <b>2020</b>, 390-402 (2020).</li><li>Patil, S. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=.">.</a> <em style='font-style: italic'>valhalla/t5-small-qg-hl</em>. , (2020).</li><li>. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=.">.</a> <em style='font-style: italic'>deepset/roberta-base-squad2</em>. , (2020).</li><li>Roit, P., et al. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Factually+consistent+summarization+via+reinforcement+learning+with+textual+entailment+feedback.">Factually consistent summarization via reinforcement learning with textual entailment feedback.</a> <b>2023</b>, 8027-8044 (2023).</li><li>Xia, Y., et al. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=Hallucination+diversity+aware+active+learning+for+text+summarization.">Hallucination diversity aware active learning for text summarization.</a> <b>2024</b>, 3885-3900 (2024).</li><li>Wei, Z., et al. <a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&cmd=Search&doptcmdl=Citation&defaultField=Title+Word&term=TruthRL:+Incentivizing+truthful+large+language+models+via+reinforcement+learning.">TruthRL: Incentivizing truthful large language models via reinforcement learning.</a> <em style='font-style: italic'>arXiv</em>. , (2025).</li></ol>                        </div>
+                    </div>
+                    
+                    <div class="sc_text_acc">
+                        <div class="anchor_tag" id="reprints"></div>
+                        <div class="sc_text_acc_title">
+                            <h2 class="notop">Reprints and Permissions</h2>
+                        </div>
+
+                        <div class="sc_text_acc_container">
+                            Request permission to reuse the text or figures of this JoVE article
+                            <br>
+                            <a target="_blank" href="https://app.jove.com/reprint-permissions/68962" class="sc_video_button sc_button sc_button2 d-inline-block" style="margin-top:10px;">
+                                Request Permission
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+        <div class="sc_sidebar sc_text_sidebar">
+             <!-- Use image here which links to the video page -->
+             
+                <a href="https://www.jove.com/v/68962/fine-tuning-large-language-models-using-entity-hallucination-index" class="sc_sidebar_thumbnail disabled">
+                                            <img class="lazy" alt="Fine-Tuning Large Language Models Using Entity Hallucination Index for Text Summarization" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/VideoComingSoonTeaser.webp">
+                                    </a>
+        </div>
+    </div>
+<script>window.w3tc_lazyload=1,window.lazyLoadOptions={elements_selector:".lazy",callback_loaded:function(t){var e;try{e=new CustomEvent("w3tc_lazyload_loaded",{detail:{e:t}})}catch(a){(e=document.createEvent("CustomEvent")).initCustomEvent("w3tc_lazyload_loaded",!1,!1,{e:t})}window.dispatchEvent(e)}}</script><script async src="https://www.jove.com/wp-content/plugins/w3-total-cache/pub/js/lazyload.min.js"></script></body>
+<div class="footer bg-white py-5">
+    <div class="container">
+        <div class="row align-items-center mb-5 d-none d-lg-block">
+
+            <div class="col d-flex align-items-center g-8">
+                <div class="footer_upper_right">
+                    <a href="https://www.jove.com">
+                        <img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/logo_jove.svg" alt="JoVE logo" class="footer-logo lazy" />
+                    </a>
+
+                </div>
+                <div class="footer_sep"></div>
+                <div class="footer_upper_right">
+                    <a href="/about/contact" class="footer-btn me-2">Contact Us</a>
+                    <a href="https://app.jove.com/recommend-jove-to-your-librarian" class="footer-btn">Recommend to Library</a>
+                </div>
+            </div>
+
+        </div>
+
+        
+    <div class="row row-cols-1 row-cols-lg-4 mb-5">
+                    <div class="col footer-column">
+                                    <div class="footer-block-navigation">
+                        <div class="footer-heading d-flex justify-content-between align-items-center">
+                            Research                            <img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_down.svg" alt="" class="footer-toggle d-inline-block d-lg-none lazy">
+                        </div>
+                        <ul class="list-unstyled footer-list d-none d-lg-block">
+                                                            <li><a href="/research/journal"><span class="disable-translate-press-plugin">JoVE Journal</span></a></li>
+                                                            <li><a href="/research/encyclopedia-of-experiments"><span class="disable-translate-press-plugin">JoVE Encyclopedia of Experiments</span></a></li>
+                                                            <li><a href="https://visualize.jove.com/?utm_source=jove-footer&utm_medium=x-nav"><span class="disable-translate-press-plugin">JoVE Visualize</span></a></li>
+                                                    </ul>
+                    </div>
+                                    <div class="footer-block-navigation">
+                        <div class="footer-heading d-flex justify-content-between align-items-center">
+                            Business                            <img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_down.svg" alt="" class="footer-toggle d-inline-block d-lg-none lazy">
+                        </div>
+                        <ul class="list-unstyled footer-list d-none d-lg-block">
+                                                            <li><a href="/business-ed"><span class="disable-translate-press-plugin">JoVE Business</span></a></li>
+                                                    </ul>
+                    </div>
+                            </div>
+                    <div class="col footer-column">
+                                    <div class="footer-block-navigation">
+                        <div class="footer-heading d-flex justify-content-between align-items-center">
+                            Education                            <img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_down.svg" alt="" class="footer-toggle d-inline-block d-lg-none lazy">
+                        </div>
+                        <ul class="list-unstyled footer-list d-none d-lg-block">
+                                                            <li><a href="/education/core"><span class="disable-translate-press-plugin">JoVE Core</span></a></li>
+                                                            <li><a href="/education/science-education"><span class="disable-translate-press-plugin">JoVE Science Education</span></a></li>
+                                                            <li><a href="/education/lab-manual"><span class="disable-translate-press-plugin">JoVE Lab Manual</span></a></li>
+                                                            <li><a href="https://www.jove.com/quiz"><span class="disable-translate-press-plugin">JoVE Quizzes</span></a></li>
+                                                    </ul>
+                    </div>
+                            </div>
+                    <div class="col footer-column">
+                                    <div class="footer-block-navigation">
+                        <div class="footer-heading d-flex justify-content-between align-items-center">
+                            Solutions                            <img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_down.svg" alt="" class="footer-toggle d-inline-block d-lg-none lazy">
+                        </div>
+                        <ul class="list-unstyled footer-list d-none d-lg-block">
+                                                            <li><a href="/authors/overview"><span class="disable-translate-press-plugin">Authors</span></a></li>
+                                                            <li><a href="https://app.jove.com/education"><span class="disable-translate-press-plugin">Teaching Faculty</span></a></li>
+                                                            <li><a href="/librarians/overview"><span class="disable-translate-press-plugin">Librarians</span></a></li>
+                                                            <li><a href="https://www.jove.com/schools"><span class="disable-translate-press-plugin">K12 Schools</span></a></li>
+                                                            <li><a href="https://www.jove.com/biopharma"><span class="disable-translate-press-plugin">Biopharma</span></a></li>
+                                                    </ul>
+                    </div>
+                            </div>
+                    <div class="col footer-column">
+                                    <div class="footer-block-navigation">
+                        <div class="footer-heading d-flex justify-content-between align-items-center">
+                            About JoVE                            <img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_down.svg" alt="" class="footer-toggle d-inline-block d-lg-none lazy">
+                        </div>
+                        <ul class="list-unstyled footer-list d-none d-lg-block">
+                                                            <li><a href="/about"><span class="disable-translate-press-plugin">Overview</span></a></li>
+                                                            <li><a href="/about/leadership"><span class="disable-translate-press-plugin">Leadership</span></a></li>
+                                                    </ul>
+                    </div>
+                                    <div class="footer-block-navigation">
+                        <div class="footer-heading d-flex justify-content-between align-items-center">
+                            Others                            <img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_down.svg" alt="" class="footer-toggle d-inline-block d-lg-none lazy">
+                        </div>
+                        <ul class="list-unstyled footer-list d-none d-lg-block">
+                                                            <li><a href="https://app.jove.com/subscribe-to-jove-newsletters"><span class="disable-translate-press-plugin">JoVE Newsletters</span></a></li>
+                                                            <li><a href="https://help.jove.com/hc/en-us/categories/29472762662548-General-Information"><span class="disable-translate-press-plugin">JoVE Help Center</span></a></li>
+                                                            <li><a href="https://blog.jove.com/"><span class="disable-translate-press-plugin">Blogs</span></a></li>
+                                                            <li><a href="https://www.jove.com/newsroom"><span class="disable-translate-press-plugin">JoVE Newsroom</span></a></li>
+                                                            <li><a href="/html-sitemap"><span class="disable-translate-press-plugin">Site Maps</span></a></li>
+                                                    </ul>
+                    </div>
+                            </div>
+            </div>
+
+
+        <div class="col d-flex align-items-center g-8 footer_lower_buttons">
+            <div class="footer_upper_right_sm">
+                <a href="/about/contact" class="footer-btn me-2">Contact Us</a>
+                <a href="https://app.jove.com/recommend-jove-to-your-librarian" class="footer-btn">Recommend to Library</a>
+            </div>
+        </div>
+
+        <div class="jove_footer_lower">
+
+            <div class="footer_socials_wrapper">
+
+                <img class="footer_socials_img lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/logo_jove.svg" alt="JoVE logo" class="footer-logo lazy" />
+
+                <div class="jove_footer_socials">
+
+                    <a href="https://www.facebook.com/JoVEjournal" class="jove_social_link">
+                        <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_facebook.svg" />
+                    </a>
+
+                    <a href="https://www.linkedin.com/company/jove" class="jove_social_link">
+                        <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_linkedin.svg" />
+                    </a>
+
+                    <a href="https://twitter.com/JoVEjournal" class="jove_social_link">
+                        <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_x.svg" />
+                    </a>
+
+                    <a style="cursor:pointer;" id="wechat-open" aria-haspopup="dialog" aria-controls="wechat-modal" aria-expanded="false" class="jove_social_link">
+                        <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://www.jove.com/wp-content/themes/jove/images/icon_wechat.svg" />
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div class="jove_footer_copyright">
+                <p>Copyright © 2026 MyJoVE Corporation. All rights reserved</p>
+            </div>
+
+            <div class="jove_footer_lower_menu">
+                <a href="https://app.jove.com/about/policies#step-1">Privacy</a>
+                <a href="https://app.jove.com/about/policies#step-2">Terms of Use</a>
+                <a href="https://app.jove.com/about/policies#step-3">Policies</a>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
+<style>
+    .carousel-arrow.prev::before {
+        content: "‹";
+    }
+
+    .carousel-arrow.next::before {
+        content: "›";
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: none;
+    }
+
+    body {
+        font-family: "Roboto", sans-serif;
+        font-optical-sizing: auto;
+        line-height: 142%;
+        font-size: 14px;
+    }
+
+    ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    #cookie-banner {
+        display: block;
+        background-color: #00663B;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        z-index: 1000;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.min.js" integrity="sha384-VQqxDN0EQCkWoxt/0vsQvZswzTHUVOImccYmSyhJTp7kGtPed0Qcx8rK9h9YEgx+" crossorigin="anonymous"></script>
+<script src="https://www.jove.com/wp-content/themes/jove/js/script.js?v=42007895"></script>
+<script src="https://www.jove.com/wp-content/themes/jove/js/custom.js?v=725510371"></script>
+
+<!-- Modal -->
+<div id="wechat-modal" class="wechat-modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="wechat-backdrop"></div>
+    <div class="wechat-dialog">
+        <button type="button" class="wechat-close" aria-label="Close">
+            <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2020%2020'%3E%3C/svg%3E" data-src="https://unpkg.com/feather-icons/dist/icons/x.svg" alt="" width="20" height="20">
+        </button>
+
+        <img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201%201'%3E%3C/svg%3E" data-src="https://cloudfront.jove.com/img/icons/qr-code.jpg" alt="WeChat QR code">
+    </div>
+</div>
+
+<template id="tp-language" data-tp-language="en_US"></template>	<script type="text/javascript">
+		function genesisBlocksShare( url, title, w, h ){
+			var left = ( window.innerWidth / 2 )-( w / 2 );
+			var top  = ( window.innerHeight / 2 )-( h / 2 );
+			return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=600, height=600, top='+top+', left='+left);
+		}
+	</script>
+				<script>
+				const lazyloadRunObserver = () => {
+					const lazyloadBackgrounds = document.querySelectorAll( `.e-con.e-parent:not(.e-lazyloaded)` );
+					const lazyloadBackgroundObserver = new IntersectionObserver( ( entries ) => {
+						entries.forEach( ( entry ) => {
+							if ( entry.isIntersecting ) {
+								let lazyloadBackground = entry.target;
+								if( lazyloadBackground ) {
+									lazyloadBackground.classList.add( 'e-lazyloaded' );
+								}
+								lazyloadBackgroundObserver.unobserve( entry.target );
+							}
+						});
+					}, { rootMargin: '200px 0px 200px 0px' } );
+					lazyloadBackgrounds.forEach( ( lazyloadBackground ) => {
+						lazyloadBackgroundObserver.observe( lazyloadBackground );
+					} );
+				};
+				const events = [
+					'DOMContentLoaded',
+					'elementor/lazyload/observe',
+				];
+				events.forEach( ( event ) => {
+					document.addEventListener( event, lazyloadRunObserver );
+				} );
+			</script>
+			<script src="https://www.jove.com/wp-includes/js/dist/hooks.min.js?ver=4d63a3d491d11ffd8ac6" id="wp-hooks-js"></script>
+<script src="https://www.jove.com/wp-includes/js/dist/i18n.min.js?ver=5e580eb46a90c2b997e6" id="wp-i18n-js"></script>
+<script id="wp-i18n-js-after">
+wp.i18n.setLocaleData( { 'text direction\u0004ltr': [ 'ltr' ] } );
+</script>
+<script src="https://www.jove.com/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=6.0.6" id="swv-js"></script>
+<script id="contact-form-7-js-before">
+var wpcf7 = {
+    "api": {
+        "root": "https:\/\/www.jove.com\/wp-json\/",
+        "namespace": "contact-form-7\/v1"
+    },
+    "cached": 1
+};
+</script>
+<script src="https://www.jove.com/wp-content/plugins/contact-form-7/includes/js/index.js?ver=6.0.6" id="contact-form-7-js"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/flowplayer.min.js?ver=1.1" id="flowplayer-js"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/cuepoints.min.js?ver=2.0" id="flowplayer-cuepoints-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/dash.min.js?ver=2.0" id="flowplayer-dash-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/drm.min.js?ver=2.0" id="flowplayer-drm-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/hls.min.js?ver=2.0" id="flowplayer-hls-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/keyboard.min.js?ver=2.0" id="flowplayer-keyboard-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/ovp.min.js?ver=2.0" id="flowplayer-ovp-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/playlist.min.js?ver=2.0" id="flowplayer-playlist-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/speed.min.js?ver=2.0" id="flowplayer-speed-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/subtitles.min.js?ver=2.0" id="flowplayer-subtitles-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/plugins/thumbnails.min.js?ver=2.0" id="flowplayer-thumbnails-js" defer data-wp-strategy="defer"></script>
+<script src="https://www.jove.com/wp-content/plugins/jove-flowplayer-plugin/js/flowplayer-seo.js?ver=1" id="flowplayer-seo-js"></script>
+<script src="https://www.jove.com/wp-content/plugins/genesis-blocks/dist/assets/js/dismiss.js?ver=1752051560" id="genesis-blocks-dismiss-js-js"></script>
+<script src="https://www.jove.com/wp-includes/js/imagesloaded.min.js?ver=5.0.0" id="imagesloaded-js"></script>
+<script src="https://www.jove.com/wp-includes/js/masonry.min.js?ver=4.2.2" id="masonry-js"></script>
+<script src="https://www.jove.com/wp-content/plugins/translatepress-multilingual/assets/js/trp-clickable-ls.js?ver=2.7.9" id="trp-clickable-ls-js-js"></script>
+
+<!-- Hubspot -->
+<script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/20267955.js"></script>
+
+</body>
+
+</html>
+<!--
+Performance optimized by W3 Total Cache. Learn more: https://www.boldgrid.com/w3-total-cache/
+
+Object Caching 0/0 objects using APC
+Lazy Loading
+
+Served from: localhost @ 2026-03-07 20:54:14 by W3 Total Cache
+-->
